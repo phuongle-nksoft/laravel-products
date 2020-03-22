@@ -3,7 +3,7 @@
 Run the command below to install via Composer
 
 ```shell
-composer require nksoft/laravel-master
+composer require nksoft/laravel-products
 ```
 
 ## Getting Started
