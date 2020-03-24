@@ -22,7 +22,7 @@ class CreateShippingsTable extends Migration
             $table->text('note')->nullable();
             $table->softDeletes();
             $table->timestamps();
-            $this->foreign('customers_id', 'shippings_customers_id_foreign')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('customers_id', 'shippings_customers_id_foreign')->references('id')->on('customers')->onDelete('cascade');
         });
     }
 

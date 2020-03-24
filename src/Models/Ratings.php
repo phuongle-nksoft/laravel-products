@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Ratings extends Model
+use Nksoft\Master\Models\NksoftModel;
+class Ratings extends NksoftModel
 {
     //
 }

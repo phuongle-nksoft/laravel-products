@@ -2,9 +2,9 @@
 
 namespace App\Modles;
 
-use Illuminate\Database\Eloquent\Model;
+use Nksoft\Master\Models\NksoftModel;
 
-class Vintages extends Model
+class Vintages extends NksoftModel
 {
     //
 }

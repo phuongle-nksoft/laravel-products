@@ -28,10 +28,10 @@ class CreateProductsTable extends Migration
             $table->text('meta_description')->nullable();
             $table->softDeletes();
             $table->timestamps();
-            $this->foreign('categories_id', 'products_categories_id_foreign')->references('id')->on('categories')->onDelete('cascade');
-            $this->foreign('vintages_id', 'products_vintages_id_foreign')->references('id')->on('vintages')->onDelete('cascade');
-            $this->foreign('regions_id', 'products_regions_id_foreign')->references('id')->on('regions')->onDelete('cascade');
-            $this->foreign('brands_id', 'products_brands_id_foreign')->references('id')->on('brands')->onDelete('cascade');
+            $table->foreign('categories_id', 'products_categories_id_foreign')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('vintages_id', 'products_vintages_id_foreign')->references('id')->on('vintages')->onDelete('cascade');
+            $table->foreign('regions_id', 'products_regions_id_foreign')->references('id')->on('regions')->onDelete('cascade');
+            $table->foreign('brands_id', 'products_brands_id_foreign')->references('id')->on('brands')->onDelete('cascade');
         });
     }
 
@@ -43,8 +43,14 @@ class CreateProductsTable extends Migration
     public function down()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropForeign(['products_categories_id_foreign', 'products_vintages_id_foreign', 'products_regions_id_foreign', 'products_brands_id_foreign']);
-            $table->dropIndex(['products_categories_id_index', 'products_vintages_id_index', 'products_regions_id_index', 'products_brands_id_index']);
+            $table->dropForeign('products_categories_id_foreign');
+            $table->dropForeign('products_vintages_id_foreign');
+            $table->dropForeign('products_regions_id_foreign');
+            $table->dropForeign('products_brands_id_foreign');
+            $table->dropIndex('products_categories_id_index');
+            $table->dropIndex('products_vintages_id_index');
+            $table->dropIndex('products_regions_id_index');
+            $table->dropIndex('products_brands_id_index');
         });
         Schema::dropIfExists('products');
     }

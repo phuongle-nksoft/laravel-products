@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Nksoft\Master\Models\NksoftModel;
 
-class Regions extends Model
+class Regions extends NksoftModel
 {
     //
 }

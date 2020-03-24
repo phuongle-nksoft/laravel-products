@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Nksoft\Master\Models\NksoftModel;
 
-class Professionals extends Model
+class Professionals extends NksoftModel
 {
     //
 }

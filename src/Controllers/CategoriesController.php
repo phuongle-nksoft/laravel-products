@@ -4,12 +4,13 @@ namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
-
+use Nksoft\Products\Models\Categories as CurrentModel;
+use Illuminate\Support\Str;
 class CategoriesController extends WebController
 {
-    private $formData = ['id', 'is_active', 'role_id', 'name', 'email', 'password', 'phone', 'birthday', 'area'];
+    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
 
-    protected $module = 'users';
+    protected $module = 'categories';
     /**
      * Display a listing of the resource.
      *
@@ -18,10 +19,10 @@ class CategoriesController extends WebController
     public function index()
     {
         try {
-            $columns = ['id', 'name', 'email', 'phone', 'area'];
-            $users = CurrentModule::select($columns)->get();
+            $columns = ['id', 'name', 'parent_id', 'is_active'];
+            $results = CurrentModel::select($columns)->get();
             $response = [
-                'rows' => $users,
+                'rows' => $results,
                 'columns' => $columns,
                 'module' => $this->module,
             ];
@@ -52,20 +53,31 @@ class CategoriesController extends WebController
         }
     }
 
-    private function formElement()
+    private function formElement($result = null)
     {
-        $roles = Roles::select(['id', 'name'])->get();
         $status = [];
         foreach (config('nksoft.status') as $v => $k) {
             $status[] = ['id' => $k['id'], 'name' => trans($k['name'])];
         }
+        $categories = [
+                [
+                    'text' => trans('nksoft::common.root'),
+                    'id' => 0,
+                    'icon' => 'fas fa-folder',
+                    'state' => [
+                        'opened' => true
+                    ],
+                    'children' => CurrentModel::GetListCategories(array('parent_id' => 0), $result)
+                ]
+			];
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
-                    ['key' => 'role_id', 'label' => trans('nksoft::users.Roles'), 'data' => $roles, 'type' => 'select'],
+                    ['key' => 'parent_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea']
                 ],
                 'active' => true,
             ],
@@ -73,28 +85,22 @@ class CategoriesController extends WebController
                 'key' => 'inputForm',
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
-                    ['key' => 'name', 'label' => trans('nksoft::users.Username'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'email', 'label' => trans('nksoft::users.Email'), 'data' => null, 'class' => 'required', 'type' => 'email'],
-                    ['key' => 'password', 'label' => trans('nksoft::users.Password'), 'data' => null, 'class' => 'required', 'type' => 'password'],
-                    ['key' => 'phone', 'label' => trans('nksoft::users.Phone'), 'data' => null, 'type' => 'text'],
-                    ['key' => 'birthday', 'label' => trans('nksoft::users.Birthday'), 'data' => null, 'type' => 'date'],
-                    ['key' => 'area', 'label' => trans('nksoft::users.Area'), 'data' => config('nksoft.area'), 'type' => 'select'],
-                    ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'data' => config('nksoft.area'), 'type' => 'image'],
+                    ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
+                    ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
+                    ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
         ];
     }
 
-    private function rules($id = 0)
+    private function rules()
     {
         $rules = [
             'name' => 'required',
-            'email' => 'required|email',
             'images[]' => 'file',
         ];
-        if ($id == 0) {
-            $rules['password'] = 'required|min:6';
-        }
 
         return $rules;
     }
@@ -102,11 +108,7 @@ class CategoriesController extends WebController
     private function message()
     {
         return [
-            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::Users.Username')]),
-            'email.required' => __('nksoft::message.Field is require!', ['Field' => 'Email']),
-            'email.email' => __('nksoft::message.Email is incorrect!'),
-            'password.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::login.Password')]),
-            'password.min' => __('nksoft::message.Field more than number letter!', ['Field' => trans('nksoft::login.Password'), 'number' => 6]),
+            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')])
         ];
     }
     /**
@@ -128,14 +130,16 @@ class CategoriesController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            $data['password'] = \Hash::make($data['password']);
-            $user = CurrentModule::create($data);
+            if(!$data['parent_id']) $data['parent_id'] = 0;
+            if(!$data['slug']) $data['slug'] = $data['name'];
+            $data['slug'] = Str::slug($data['slug'].rand(100, strtotime('now')));
+            $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
-                $this->setMedia($images, $user->id, $this->module);
+                $this->setMedia($images, $result->id, $this->module);
             }
             $response = [
-                'result' => $user,
+                'result' => $result,
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
@@ -163,10 +167,10 @@ class CategoriesController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModule::select($this->formData)->with(['images'])->find($id);
+            $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
             \array_push($this->formData, 'images');
             $response = [
-                'formElement' => $this->formElement(),
+                'formElement' => $this->formElement($result),
                 'result' => $result,
                 'formData' => $this->formData,
                 'module' => $this->module,
@@ -186,8 +190,8 @@ class CategoriesController extends WebController
      */
     public function update(Request $request, $id)
     {
-        $user = CurrentModule::find($id);
-        if ($user == null) {
+        $result = CurrentModel::find($id);
+        if ($result == null) {
             return $this->responseError();
         }
         $validator = Validator($request->all(), $this->rules($id), $this->message());
@@ -201,22 +205,18 @@ class CategoriesController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if ($data['password'] !== $user->password) {
-                $data['password'] = \Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
             foreach ($data as $k => $v) {
-                $user->$k = $v;
+                $result->$k = $v;
             }
-            $user->save();
-            // $user = CurrentModule::save(['id' => $id], $data);
+            if(!$data['parent_id']) $data['parent_id'] = 0;
+            if(!$data['slug']) $data['slug'] = Str::slug($data['name'].rand(100, strtotime('now')), '-');
+            $result->save();
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
-                $this->setMedia($images, $user->id, $this->module);
+                $this->setMedia($images, $result->id, $this->module);
             }
             $response = [
-                'result' => $user,
+                'result' => $result,
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
@@ -233,7 +233,7 @@ class CategoriesController extends WebController
     public function destroy($id)
     {
         try {
-            CurrentModule::find($id)->delete();
+            CurrentModel::find($id)->delete();
             return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());

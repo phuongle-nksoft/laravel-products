@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Nksoft\Master\Models\NksoftModel;
 
-class Shipping extends Model
+class Shipping extends NksoftModel
 {
     //
 }

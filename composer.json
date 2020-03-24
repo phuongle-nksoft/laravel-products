@@ -7,7 +7,8 @@
         "php": "^7.1",
         "laravel/framework": "^5.8",
         "intervention/image": "^2.3",
-        "nksoft/laravel-master": "^v1.0"
+        "nksoft/laravel-master": "^v1.0",
+        "laravel/helpers": "^1.2"
     },
     "authors": [{
         "name": "PhuongLe",

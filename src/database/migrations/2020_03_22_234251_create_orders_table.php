@@ -15,18 +15,18 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('products_id')->index();
-            $table->unsignedBigInteger('customers_id')->index();
-            $table->unsignedBigInteger('shippings_id')->index();
+            $table->unsignedBigInteger('products_id')->index('orders_products_id_index');
+            $table->unsignedBigInteger('customers_id')->index('orders_customers_id_index');
+            $table->unsignedBigInteger('shippings_id')->index('orders_shippings_id_index');
             $table->integer('qty');
             $table->decimal('price', 12, 2)->nullable()->default(0);
             $table->decimal('toltal', 12, 2)->nullable()->default(0);
             $table->integer('status')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
-            $this->foreign('customers_id')->references('id')->on('customers')->onDelete('cascade');
-            $this->foreign('products_id')->references('id')->on('products')->onDelete('cascade');
-            $this->foreign('shippings_id')->references('id')->on('shippings')->onDelete('cascade');
+            $table->foreign('customers_id', 'orders_customers_id_foreign')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('products_id', 'orders_products_id_foreign')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('shippings_id', 'orders_shippings_id_foreign')->references('id')->on('shippings')->onDelete('cascade');
         });
     }
 
@@ -37,9 +37,13 @@ class CreateOrdersTable extends Migration
      */
     public function down()
     {
-        Schema::table('professional_ratings', function (Blueprint $table) {
-            $table->dropForeign(['customers_id', 'products_id', 'shippings_id']);
-            $table->dropIndex(['customers_id', 'products_id', 'shippings_id']);
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropForeign('orders_customers_id_foreign');
+            $table->dropForeign('orders_products_id_foreign');
+            $table->dropForeign('orders_shippings_id_foreign');
+            $table->dropIndex('orders_customers_id_index');
+            $table->dropIndex('orders_products_id_index');
+            $table->dropIndex('orders_shippings_id_index');
         });
         Schema::dropIfExists('orders');
     }

@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
+use Nksoft\Master\Controllers\WebController;
 
-class Customers extends Controller
+class ShippingsController extends WebController
 {
     /**
      * Display a listing of the resource.

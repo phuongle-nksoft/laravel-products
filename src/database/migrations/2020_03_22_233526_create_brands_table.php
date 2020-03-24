@@ -21,6 +21,7 @@ class CreateBrandsTable extends Migration
             $table->string('slug')->nullable();
             $table->longText('description')->nullable();
             $table->text('meta_description')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Nksoft\Products\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class PaymentMethods extends Model
+use Nksoft\Master\Models\NksoftModel;
+class PaymentMethods extends NksoftModel
 {
-    //
 }

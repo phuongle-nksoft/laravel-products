@@ -15,12 +15,12 @@ class CreateRatingsTable extends Migration
     {
         Schema::create('ratings', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('products_id')->index();
+            $table->unsignedBigInteger('products_id')->index('ratings_products_id_index');
             $table->longText('description')->nullable();
             $table->double('ratings', 8, 2)->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
-            $this->foreign('products_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('products_id', 'ratings_products_id_foreign')->references('id')->on('products')->onDelete('cascade');
         });
     }
 
@@ -31,6 +31,10 @@ class CreateRatingsTable extends Migration
      */
     public function down()
     {
+        Schema::table('ratings', function (Blueprint $table) {
+            $table->dropForeign('ratings_products_id_foreign');
+            $table->dropIndex('ratings_products_id_index');
+        });
         Schema::dropIfExists('ratings');
     }
 }
