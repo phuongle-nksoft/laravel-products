@@ -16,19 +16,47 @@ class NavigationsTableSeeder extends Seeder
     {
         $products = [
             [
+                'title' => 'Brands',
+                'link' => 'brands',
+                'icon' => 'nav-icon fas fa-book-reader',
+                'is_active' => true,
+                'order_by' => 1,
+            ],
+            [
+                'title' => 'Regions',
+                'link' => 'regions',
+                'icon' => 'nav-icon fas fa-map-marked',
+                'is_active' => true,
+                'order_by' => 2,
+            ],
+            [
+                'title' => 'Vintages',
+                'link' => 'vintages',
+                'icon' => 'nav-icon fas fa-truck-moving',
+                'is_active' => true,
+                'order_by' => 3,
+            ],
+            [
+                'title' => 'Professionals',
+                'link' => 'professionals',
+                'icon' => 'nav-icon fas fa-user-shield',
+                'is_active' => true,
+                'order_by' => 3,
+            ],
+            [
                 'title' => 'Categories',
                 'link' => 'categories',
                 'icon' => 'nav-icon far fa-folder',
                 'is_active' => true,
-                'order_by' => 1,
+                'order_by' => 4,
             ],
             [
                 'title' => 'Products',
                 'link' => 'products',
                 'icon' => 'nav-icon fas fa-store-alt',
                 'is_active' => true,
-                'order_by' => 2,
-            ]
+                'order_by' => 5,
+            ],
         ];
         $sales = [
             [
@@ -58,7 +86,7 @@ class NavigationsTableSeeder extends Seeder
                 'icon' => 'nav-icon fas fa-file-invoice',
                 'is_active' => true,
                 'order_by' => 2,
-            ]
+            ],
         ];
         $items = [
             [

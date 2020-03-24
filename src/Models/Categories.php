@@ -3,11 +3,13 @@
 namespace Nksoft\Products\Models;
 
 use Nksoft\Master\Models\NksoftModel;
+
 class Categories extends NksoftModel
 {
     protected $table = 'categories';
     protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
-    public function parentId() {
+    public function parentId()
+    {
         return $this->belongsTo('\Nksoft\Products\Models\Categories', 'parent_id');
     }
     /**
@@ -19,11 +21,11 @@ class Categories extends NksoftModel
         $id = $result->id ?? 0;
         $data = array();
         $fs = self::where($where)->where('id', '<>', $id)->orderBy('order_by')->get();
-        if($fs) {
-            foreach($fs as $item) {
+        if ($fs) {
+            foreach ($fs as $item) {
                 $selected = array(
                     'opened' => false,
-                    'selected'=> $item->id === $parentId ? true : false
+                    'selected' => $item->id === $parentId ? true : false,
                 );
                 $data[] = array(
                     'text' => $item->name,
@@ -31,7 +33,34 @@ class Categories extends NksoftModel
                     'id' => $item->id,
                     'state' => $selected,
                     'children' => self::GetListCategories(['parent_id' => $item->id], $result),
-                    'slug' => $item->slug
+                    'slug' => $item->slug,
+                );
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Get list category to product
+     */
+    public static function GetListByProduct($where, $product)
+    {
+        $parentId = $product->categories_id ?? 0;
+        $data = array();
+        $fs = self::where($where)->orderBy('order_by')->get();
+        if ($fs) {
+            foreach ($fs as $item) {
+                $selected = array(
+                    'opened' => false,
+                    'selected' => $item->id === $parentId ? true : false,
+                );
+                $data[] = array(
+                    'text' => $item->name,
+                    'icon' => 'fas fa-folder',
+                    'id' => $item->id,
+                    'state' => $selected,
+                    'children' => self::GetListByProduct(['parent_id' => $item->id], $product),
+                    'slug' => $item->slug,
                 );
             }
         }

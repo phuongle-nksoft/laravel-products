@@ -2,10 +2,12 @@
 
 namespace Nksoft\Products\Controllers;
 
+use Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands as CurrentModel;
-use Illuminate\Support\Str;
+
 class BrandsController extends WebController
 {
     private $formData = ['id', 'name', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
@@ -19,8 +21,13 @@ class BrandsController extends WebController
     public function index()
     {
         try {
-            $columns = ['id', 'name', 'is_active'];
-            $results = CurrentModel::select($columns)->get();
+            $columns = [
+                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'name', 'label' => trans('nksoft::common.Name')],
+                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
+            ];
+            $select = Arr::pluck($columns, 'key');
+            $results = CurrentModel::select($select)->get();
             $response = [
                 'rows' => $results,
                 'columns' => $columns,
@@ -55,17 +62,14 @@ class BrandsController extends WebController
 
     private function formElement($result = null)
     {
-        $status = [];
-        foreach (config('nksoft.status') as $v => $k) {
-            $status[] = ['id' => $k['id'], 'name' => trans($k['name'])];
-        }
+        $status = $this->status();
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea']
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
             ],
@@ -96,7 +100,7 @@ class BrandsController extends WebController
     private function message()
     {
         return [
-            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')])
+            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
         ];
     }
     /**
@@ -118,8 +122,11 @@ class BrandsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if(!$data['slug']) $data['slug'] = $data['name'];
-            $data['slug'] = Str::slug($data['slug'].rand(100, strtotime('now')));
+            if (!$data['slug']) {
+                $data['slug'] = $data['name'];
+            }
+
+            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
             $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
@@ -195,7 +202,10 @@ class BrandsController extends WebController
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
-            if(!$data['slug']) $data['slug'] = Str::slug($data['name'].rand(100, strtotime('now')), '-');
+            if (!$data['slug']) {
+                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
+            }
+
             $result->save();
             if ($request->hasFile('images')) {
                 $images = $request->file('images');

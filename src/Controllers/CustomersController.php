@@ -5,7 +5,9 @@ namespace Nksoft\Products\Controllers;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
+use \Arr;
 use \Auth;
+
 class CustomersController extends WebController
 {
     private $formData = ['id', 'is_active', 'name', 'email', 'password'];
@@ -19,8 +21,13 @@ class CustomersController extends WebController
     public function index()
     {
         try {
-            $columns = ['id', 'name', 'email'];
-            $users = CurrentModel::select($columns)->get();
+            $columns = [
+                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'name', 'label' => trans('nksoft::common.Name')],
+                ['key' => 'email', 'label' => trans('nksoft::users.Email')],
+            ];
+            $select = Arr::pluck($columns, 'key');
+            $users = CurrentModel::select($select)->get();
             $response = [
                 'rows' => $users,
                 'columns' => $columns,
@@ -55,16 +62,12 @@ class CustomersController extends WebController
 
     private function formElement()
     {
-        $status = [];
-        foreach (config('nksoft.status') as $v => $k) {
-            $status[] = ['id' => $k['id'], 'name' => trans($k['name'])];
-        }
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select']
+                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                 ],
                 'active' => true,
             ],
@@ -75,7 +78,7 @@ class CustomersController extends WebController
                     ['key' => 'name', 'label' => trans('nksoft::users.Username'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'email', 'label' => trans('nksoft::users.Email'), 'data' => null, 'class' => 'required', 'type' => 'email'],
                     ['key' => 'password', 'label' => trans('nksoft::users.Password'), 'data' => null, 'class' => 'required', 'type' => 'password'],
-                    ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'data' => config('nksoft.area'), 'type' => 'image'],
+                    ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'type' => 'image'],
                 ],
             ],
         ];

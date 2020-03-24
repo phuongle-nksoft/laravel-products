@@ -12,6 +12,11 @@ Route::group(['middleware' => 'web'], function () {
             'shippings' => WebController::class,
             'orders' => WebController::class,
             'payments' => WebController::class,
+            'brands' => WebController::class,
+            'regions' => WebController::class,
+            'vintages' => WebController::class,
+            'professionals' => WebController::class,
+            'regions' => WebController::class,
         ]);
     });
 });
