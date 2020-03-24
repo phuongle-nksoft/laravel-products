@@ -4,13 +4,13 @@ namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
-use Nksoft\Products\Models\Customers as CurrentModel;
-use \Auth;
-class CustomersController extends WebController
+use Nksoft\Products\Models\Brands as CurrentModel;
+use Illuminate\Support\Str;
+class BrandsController extends WebController
 {
-    private $formData = ['id', 'is_active', 'name', 'email', 'password'];
+    private $formData = ['id', 'name', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
 
-    protected $module = 'customers';
+    protected $module = 'brands';
     /**
      * Display a listing of the resource.
      *
@@ -19,10 +19,10 @@ class CustomersController extends WebController
     public function index()
     {
         try {
-            $columns = ['id', 'name', 'email'];
-            $users = CurrentModel::select($columns)->get();
+            $columns = ['id', 'name', 'is_active'];
+            $results = CurrentModel::select($columns)->get();
             $response = [
-                'rows' => $users,
+                'rows' => $results,
                 'columns' => $columns,
                 'module' => $this->module,
             ];
@@ -53,7 +53,7 @@ class CustomersController extends WebController
         }
     }
 
-    private function formElement()
+    private function formElement($result = null)
     {
         $status = [];
         foreach (config('nksoft.status') as $v => $k) {
@@ -64,7 +64,8 @@ class CustomersController extends WebController
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select']
+                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea']
                 ],
                 'active' => true,
             ],
@@ -72,25 +73,22 @@ class CustomersController extends WebController
                 'key' => 'inputForm',
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
-                    ['key' => 'name', 'label' => trans('nksoft::users.Username'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'email', 'label' => trans('nksoft::users.Email'), 'data' => null, 'class' => 'required', 'type' => 'email'],
-                    ['key' => 'password', 'label' => trans('nksoft::users.Password'), 'data' => null, 'class' => 'required', 'type' => 'password'],
-                    ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'data' => config('nksoft.area'), 'type' => 'image'],
+                    ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
+                    ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
+                    ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
         ];
     }
 
-    private function rules($id = 0)
+    private function rules()
     {
         $rules = [
             'name' => 'required',
-            'email' => 'required|email',
             'images[]' => 'file',
         ];
-        if ($id == 0) {
-            $rules['password'] = 'required|min:6';
-        }
 
         return $rules;
     }
@@ -98,11 +96,7 @@ class CustomersController extends WebController
     private function message()
     {
         return [
-            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::Users.Username')]),
-            'email.required' => __('nksoft::message.Field is require!', ['Field' => 'Email']),
-            'email.email' => __('nksoft::message.Email is incorrect!'),
-            'password.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::login.Password')]),
-            'password.min' => __('nksoft::message.Field more than number letter!', ['Field' => trans('nksoft::login.Password'), 'number' => 6]),
+            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')])
         ];
     }
     /**
@@ -124,14 +118,15 @@ class CustomersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            $data['password'] = \Hash::make($data['password']);
-            $user = CurrentModel::create($data);
+            if(!$data['slug']) $data['slug'] = $data['name'];
+            $data['slug'] = Str::slug($data['slug'].rand(100, strtotime('now')));
+            $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
-                $this->setMedia($images, $user->id, $this->module);
+                $this->setMedia($images, $result->id, $this->module);
             }
             $response = [
-                'result' => $user,
+                'result' => $result,
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
@@ -162,7 +157,7 @@ class CustomersController extends WebController
             $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
             \array_push($this->formData, 'images');
             $response = [
-                'formElement' => $this->formElement(),
+                'formElement' => $this->formElement($result),
                 'result' => $result,
                 'formData' => $this->formData,
                 'module' => $this->module,
@@ -182,8 +177,8 @@ class CustomersController extends WebController
      */
     public function update(Request $request, $id)
     {
-        $user = CurrentModel::find($id);
-        if ($user == null) {
+        $result = CurrentModel::find($id);
+        if ($result == null) {
             return $this->responseError();
         }
         $validator = Validator($request->all(), $this->rules($id), $this->message());
@@ -197,22 +192,17 @@ class CustomersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if ($data['password'] !== $user->password) {
-                $data['password'] = \Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
             foreach ($data as $k => $v) {
-                $user->$k = $v;
+                $result->$k = $v;
             }
-            $user->save();
-            // $user = CurrentModel::save(['id' => $id], $data);
+            if(!$data['slug']) $data['slug'] = Str::slug($data['name'].rand(100, strtotime('now')), '-');
+            $result->save();
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
-                $this->setMedia($images, $user->id, $this->module);
+                $this->setMedia($images, $result->id, $this->module);
             }
             $response = [
-                'result' => $user,
+                'result' => $result,
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
@@ -234,28 +224,5 @@ class CustomersController extends WebController
         } catch (\Exception $e) {
             return $this->responseError($e);
         }
-    }
-
-    public function login(Request $request)
-    {
-        $validator = Validator($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|min:6|max:32',
-        ]);
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors([trans('nksoft::login.Email or password is incorrect!')], 'login');
-        }
-
-        $credentials = $request->only('email', 'password', 'active');
-        if (Auth::attempt($credentials)) {
-            return redirect()->to('admin');
-        }
-        return redirect()->back()->withErrors([trans('nksoft::login.Email or password is incorrect!')], 'login');
-    }
-
-    public function logout()
-    {
-        Auth::logout();
-        return redirect()->to('login');
     }
 }

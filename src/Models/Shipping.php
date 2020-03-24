@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Nksoft\Products\Models;
 
 use Nksoft\Master\Models\NksoftModel;
 
