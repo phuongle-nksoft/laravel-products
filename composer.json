@@ -22,9 +22,7 @@
         }
     },
     "autoload": {
-        "files": [
-            "src/helpers.php"
-        ],
+        "files": [],
         "psr-4": {
             "Nksoft\\Products\\": "src/",
             "Nksoft\\Products\\database\\seeds\\": "src/database/seeds/"
