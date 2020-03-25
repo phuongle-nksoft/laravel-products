@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Nksoft\Products\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Orders extends Model
+use Nksoft\Master\Models\NksoftModel;
+class Orders extends NksoftModel
 {
-    //
 }

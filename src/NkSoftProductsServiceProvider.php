@@ -31,10 +31,7 @@ class NkSoftProductsServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/views', 'products');
         $this->loadTranslationsFrom(__DIR__ . '/language', 'nksoft');
         $this->publishes([
-            __DIR__ . '/views' => resource_path('views/vendor/products'),
-            __DIR__ . '/public' => public_path('nksoft'),
             __DIR__ . '/language' => resource_path('lang/vendor/nksoft'),
-            __DIR__ . '/config/nksoft.php' => config_path('nksoft.php'),
         ], 'nksoft');
         $this->mergeConfigFrom(__DIR__ . '/config/nksoft.php', 'nksoft');
         view()->composer('master::parts.sidebar', function ($view) {

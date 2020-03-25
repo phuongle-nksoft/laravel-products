@@ -4,14 +4,16 @@ namespace Nksoft\Products\Models;
 
 use Nksoft\Master\Models\NksoftModel;
 
-class Categories extends NksoftModel
+class Regions extends NksoftModel
 {
-    protected $table = 'categories';
+    protected $table = 'regions';
     protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
+
     public function parentId()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Categories', 'parent_id');
+        return $this->belongsTo('\Nksoft\Products\Models\Regions', 'parent_id');
     }
+
     /**
      * Get list category with recursive
      */
@@ -45,7 +47,7 @@ class Categories extends NksoftModel
      */
     public static function GetListByProduct($where, $product)
     {
-        $parentId = $product->categories_id ?? 0;
+        $parentId = $product->regions_id ?? 0;
         $data = array();
         $fs = self::where($where)->orderBy('order_by')->get();
         if ($fs) {

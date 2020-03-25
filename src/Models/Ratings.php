@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Nksoft\Products\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class Ratings extends Model
+use Nksoft\Master\Models\NksoftModel;
+class Ratings extends NksoftModel
 {
-    //
+    protected $table = 'ratings';
+    protected $fillable = ['id', 'products_id', 'description', 'ratings'];
 }
