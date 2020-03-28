@@ -23,6 +23,8 @@ class CreateProductsTable extends Migration
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
             $table->decimal('price', 12, 2)->nullable()->default(0);
+            $table->decimal('alcohol_content', 12, 2)->nullable()->default(0);
+            $table->decimal('volume', 12, 2)->nullable()->default(0);
             $table->longText('description')->nullable();
             $table->string('slug')->nullable();
             $table->text('meta_description')->nullable();

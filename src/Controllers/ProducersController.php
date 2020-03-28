@@ -1,23 +1,16 @@
 <?php
-
 namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
-use Nksoft\Products\Models\Brands;
-use Nksoft\Products\Models\Categories;
-use Nksoft\Products\Models\Products as CurrentModel;
-use Nksoft\Products\Models\Regions;
-use Nksoft\Products\Models\Vintages;
-use Nksoft\Products\Models\Professionals;
-use Str;
+use Nksoft\Products\Models\Producers as CurrentModel;
 
-class ProductsController extends WebController
+class ProducersController extends WebController
 {
-    private $formData = ['id', 'name', 'categories_id', 'vintages_id', 'regions_id', 'brands_id', 'is_active', 'order_by', 'price', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'description'];
 
-    protected $module = 'products';
+    protected $module = 'producers';
     /**
      * Display a listing of the resource.
      *
@@ -29,8 +22,6 @@ class ProductsController extends WebController
             $columns = [
                 ['key' => 'id', 'label' => 'Id'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
-                ['key' => 'price', 'label' => trans('nksoft::common.Price')],
-                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
             ];
             $select = Arr::pluck($columns, 'key');
             $results = CurrentModel::select($select)->get();
@@ -58,7 +49,7 @@ class ProductsController extends WebController
                 'formElement' => $this->formElement(),
                 'result' => null,
                 'formData' => $this->formData,
-                'module' => $this->module
+                'module' => $this->module,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -68,45 +59,15 @@ class ProductsController extends WebController
 
     private function formElement($result = null)
     {
-        $categories = Categories::GetListByProduct(array('parent_id' => 0), $result);
-        $vintages = Vintages::GetListByProduct(array('parent_id' => 0), $result);
-        $brands = Brands::select(['id', 'name'])->get();
-        $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
-        $professional = Professionals::select(['id', 'name'])->get();
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
-                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'type' => 'tree'],
-                    ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'type' => 'tree'],
-                    ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
+                    ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                 ],
                 'active' => true,
-            ],
-            [
-                'key' => 'inputForm',
-                'label' => trans('nksoft::common.Content'),
-                'element' => [
-                    ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'class' => 'required', 'type' => 'number'],
-                    ['key' => 'alcohol_content' , 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
-                    ['key' => 'volume', 'label' => trans('nksoft::common.Volumne'), 'data' => null, 'class' => 'required', 'type' => 'number'],
-                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
-                    ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
-                    ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
-                    ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
-                ],
-            ],
-            [
-                'key' => 'professional',
-                'label' => trans('nksoft::common.Professional Rating'),
-                'element' => [
-                    ['key' => 'professional', 'label' => trans('nksoft::common.Button.Add'), 'data' => null, 'type' => 'custom']
-                ],
             ],
         ];
     }
@@ -115,7 +76,6 @@ class ProductsController extends WebController
     {
         $rules = [
             'name' => 'required',
-            'images[]' => 'file',
         ];
 
         return $rules;
@@ -142,20 +102,9 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images') {
-                    $data[$item] = $request->get($item);
-                }
+                $data[$item] = $request->get($item);
             }
-            if (!$data['slug']) {
-                $data['slug'] = $data['name'];
-            }
-
-            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
             $result = CurrentModel::create($data);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
             $response = [
                 'result' => $result,
             ];
@@ -185,8 +134,7 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
-            \array_push($this->formData, 'images');
+            $result = CurrentModel::select($this->formData)->find($id);
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -219,22 +167,14 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images' && $item != 'id') {
+                if ($item != 'id') {
                     $data[$item] = $request->get($item);
                 }
             }
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
-            if (!$data['slug']) {
-                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
-            }
-
             $result->save();
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
             $response = [
                 'result' => $result,
             ];
