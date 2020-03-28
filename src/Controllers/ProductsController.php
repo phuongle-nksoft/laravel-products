@@ -15,7 +15,7 @@ use Str;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'categories_id', 'vintages_id', 'regions_id', 'brands_id', 'is_active', 'order_by', 'price', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'categories_id', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
     /**
@@ -73,6 +73,25 @@ class ProductsController extends WebController
         $brands = Brands::select(['id', 'name'])->get();
         $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
         $professional = Professionals::select(['id', 'name'])->get();
+        $custom = [
+            [
+                'label' => trans('nksoft::common.professionals'),
+                'type' => 'select',
+                'defaultValue' => $professional,
+                'key' => 'professional'
+            ],
+            [
+                'label' => trans('nksoft::common.Rating'),
+                'type' => 'number',
+                'key' => 'rating',
+                'class' => 'col-12 col-lg-3'
+            ],
+            [
+                'label' => trans('nksoft::common.Content'),
+                'type' => 'textarea',
+                'key' => 'content'
+            ]
+        ];
         return [
             [
                 'key' => 'general',
@@ -92,7 +111,9 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'sku', 'label' => trans('nksoft::common.Sku'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'alcohol_content' , 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volumne'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
@@ -102,10 +123,10 @@ class ProductsController extends WebController
                 ],
             ],
             [
-                'key' => 'professional',
+                'key' => 'professionals_rating',
                 'label' => trans('nksoft::common.Professional Rating'),
                 'element' => [
-                    ['key' => 'professional', 'label' => trans('nksoft::common.Button.Add'), 'data' => null, 'type' => 'custom']
+                    ['key' => 'professionals_rating', 'label' => trans('nksoft::common.Button.Add'), 'data' => $custom, 'type' => 'custom']
                 ],
             ],
         ];
