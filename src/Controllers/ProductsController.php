@@ -11,11 +11,12 @@ use Nksoft\Products\Models\Products as CurrentModel;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Vintages;
 use Nksoft\Products\Models\Professionals;
+use Nksoft\Products\Models\CategoryProductsIndex;
 use Str;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'categories_id', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
     /**
@@ -54,6 +55,7 @@ class ProductsController extends WebController
     {
         try {
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'categories_id');
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -98,7 +100,7 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
+                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'multiple' => true, 'type' => 'tree'],
                     ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'type' => 'tree'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'type' => 'select'],
@@ -115,7 +117,7 @@ class ProductsController extends WebController
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'alcohol_content' , 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
-                    ['key' => 'volume', 'label' => trans('nksoft::common.Volumne'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
@@ -136,6 +138,14 @@ class ProductsController extends WebController
     {
         $rules = [
             'name' => 'required',
+            'categories_id' => 'required',
+            'vintages_id' => 'required',
+            'regions_id' => 'required',
+            'brands_id' => 'required',
+            'sku' => 'required',
+            'price' => 'required',
+            'alcohol_content' => 'required',
+            'volume' => 'required',
             'images[]' => 'file',
         ];
 
@@ -146,6 +156,14 @@ class ProductsController extends WebController
     {
         return [
             'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
+            'categories_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.categories')]),
+            'vintages_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.vintages')]),
+            'regions_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.regions')]),
+            'brands_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.brands')]),
+            'sku.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Sku')]),
+            'price.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Price')]),
+            'alcohol_content.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Alcohol Content')]),
+            'volume.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Volume')]),
         ];
     }
     /**
@@ -163,7 +181,7 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images') {
+                if (!in_array(['images', 'categories_id'], $item)) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -173,6 +191,7 @@ class ProductsController extends WebController
 
             $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
             $result = CurrentModel::create($data);
+            $this->setCategoryProductsIndex($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -183,6 +202,24 @@ class ProductsController extends WebController
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError($e);
+        }
+    }
+
+    private function setCategoryProductsIndex(Request $request, $result) {
+        $categoryIds = \json_decode($request->get('categories_id'));
+        $categoryProducts = CategoryProductsIndex::where(['products_id' => $result->id])->get();
+        /** Delete record by category id not in list */
+        foreach($categoryProducts as $categoryProduct) {
+            if(!in_array($categoryProduct->categories_id, $categoryIds)) $categoryProduct->destroy();
+        }
+        /** Save new record */
+        foreach($categoryIds as $id) {
+            if(!$categoryProducts->where(['categories_id' => $id])->first()) {
+                $categoryProductIndex = new CategoryProductsIndex();
+                $categoryProductIndex->products_id = $result->id;
+                $categoryProductIndex->categories_id = $id;
+                $categoryProductIndex->save();
+            }
         }
     }
 
@@ -206,8 +243,9 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
+            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies'])->find($id);
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'categories_id');
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -252,6 +290,7 @@ class ProductsController extends WebController
             }
 
             $result->save();
+            $this->setCategoryProductsIndex($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);

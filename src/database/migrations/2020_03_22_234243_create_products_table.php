@@ -16,7 +16,6 @@ class CreateProductsTable extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->unsignedBigInteger('categories_id')->index('products_categories_id_index');
             $table->unsignedBigInteger('vintages_id')->index('products_vintages_id_index');
             $table->unsignedBigInteger('regions_id')->index('products_regions_id_index');
             $table->unsignedBigInteger('brands_id')->index('products_brands_id_index');
@@ -30,7 +29,6 @@ class CreateProductsTable extends Migration
             $table->text('meta_description')->nullable();
             $table->softDeletes();
             $table->timestamps();
-            $table->foreign('categories_id', 'products_categories_id_foreign')->references('id')->on('categories')->onDelete('cascade');
             $table->foreign('vintages_id', 'products_vintages_id_foreign')->references('id')->on('vintages')->onDelete('cascade');
             $table->foreign('regions_id', 'products_regions_id_foreign')->references('id')->on('regions')->onDelete('cascade');
             $table->foreign('brands_id', 'products_brands_id_foreign')->references('id')->on('brands')->onDelete('cascade');
@@ -45,11 +43,9 @@ class CreateProductsTable extends Migration
     public function down()
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropForeign('products_categories_id_foreign');
             $table->dropForeign('products_vintages_id_foreign');
             $table->dropForeign('products_regions_id_foreign');
             $table->dropForeign('products_brands_id_foreign');
-            $table->dropIndex('products_categories_id_index');
             $table->dropIndex('products_vintages_id_index');
             $table->dropIndex('products_regions_id_index');
             $table->dropIndex('products_brands_id_index');
