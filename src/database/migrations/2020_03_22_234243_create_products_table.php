@@ -16,16 +16,20 @@ class CreateProductsTable extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
+            $table->string('sku')->unique();
             $table->unsignedBigInteger('vintages_id')->index('products_vintages_id_index');
             $table->unsignedBigInteger('regions_id')->index('products_regions_id_index');
             $table->unsignedBigInteger('brands_id')->index('products_brands_id_index');
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
             $table->decimal('price', 12, 2)->nullable()->default(0);
+            $table->decimal('special_price', 12, 2)->nullable()->default(0);
             $table->decimal('alcohol_content', 12, 2)->nullable()->default(0);
             $table->decimal('volume', 12, 2)->nullable()->default(0);
             $table->longText('description')->nullable();
+            $table->longText('professionals_rating')->nullable();
             $table->string('slug')->nullable();
+            $table->string('video_id')->nullable();
             $table->text('meta_description')->nullable();
             $table->softDeletes();
             $table->timestamps();

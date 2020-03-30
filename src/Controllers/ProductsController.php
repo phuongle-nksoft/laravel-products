@@ -4,6 +4,7 @@ namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
@@ -16,7 +17,7 @@ use Str;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
     /**
@@ -42,7 +43,7 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
-            return $this->responseError($e);
+            return $this->responseError($e->getMessage());
         }
     }
 
@@ -64,13 +65,13 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
-            return $this->responseError($e);
+            return $this->responseError($e->getMessage());
         }
     }
 
     private function formElement($result = null)
     {
-        $categories = Categories::GetListByProduct(array('parent_id' => 0), $result);
+        $categories = Categories::GetListByProduct(array('parent_id' => 0), $result ? $result->categoryProductIndies->pluck('categories_id')->toArray() : [0]);
         $vintages = Vintages::GetListByProduct(array('parent_id' => 0), $result);
         $brands = Brands::select(['id', 'name'])->get();
         $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
@@ -181,7 +182,7 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if (!in_array(['images', 'categories_id'], $item)) {
+                if (!in_array($item, ['images', 'categories_id'])) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -201,20 +202,21 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError($e->getMessage());
         }
     }
 
     private function setCategoryProductsIndex(Request $request, $result) {
         $categoryIds = \json_decode($request->get('categories_id'));
-        $categoryProducts = CategoryProductsIndex::where(['products_id' => $result->id])->get();
+        $categoryProducts = CategoryProductsIndex::where(['products_id' => $result->id]);
         /** Delete record by category id not in list */
-        foreach($categoryProducts as $categoryProduct) {
-            if(!in_array($categoryProduct->categories_id, $categoryIds)) $categoryProduct->destroy();
+        foreach($categoryProducts->get() as $categoryProduct) {
+            if(!in_array($categoryProduct->categories_id, $categoryIds)) $categoryProduct->forceDelete();
         }
         /** Save new record */
+        $existsItem = $categoryProducts->pluck('categories_id')->toArray();
         foreach($categoryIds as $id) {
-            if(!$categoryProducts->where(['categories_id' => $id])->first()) {
+            if(count($existsItem) == 0 || !in_array($id, $existsItem)) {
                 $categoryProductIndex = new CategoryProductsIndex();
                 $categoryProductIndex->products_id = $result->id;
                 $categoryProductIndex->categories_id = $id;
@@ -246,6 +248,7 @@ class ProductsController extends WebController
             $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies'])->find($id);
             \array_push($this->formData, 'images');
             \array_push($this->formData, 'categories_id');
+            $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -254,7 +257,7 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
-            return $this->responseError($e);
+            return $this->responseError($e->getMessage());
         }
     }
 
@@ -278,7 +281,7 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images' && $item != 'id') {
+                if (!in_array($item, ['images', 'categories_id', 'id'])) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -300,7 +303,8 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            dd($e->getMessage());
+            return $this->responseError($e->getMessage());
         }
     }
 
@@ -316,7 +320,7 @@ class ProductsController extends WebController
             CurrentModel::find($id)->delete();
             return $this->responseSuccess();
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError($e->getMessage());
         }
     }
 }

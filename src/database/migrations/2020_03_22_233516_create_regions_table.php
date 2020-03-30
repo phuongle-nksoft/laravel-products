@@ -20,6 +20,7 @@ class CreateRegionsTable extends Migration
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
             $table->string('slug')->nullable();
+            $table->string('video_id')->nullable();
             $table->longText('description')->nullable();
             $table->text('meta_description')->nullable();
             $table->softDeletes();

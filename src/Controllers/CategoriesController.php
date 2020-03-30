@@ -10,7 +10,7 @@ use Str;
 
 class CategoriesController extends WebController
 {
-    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
 
     protected $module = 'categories';
     /**
@@ -92,6 +92,7 @@ class CategoriesController extends WebController
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
+                    ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
