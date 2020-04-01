@@ -48,6 +48,7 @@ class BrandsController extends WebController
     {
         try {
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'banner');
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -72,6 +73,7 @@ class BrandsController extends WebController
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
+                'selected' => $result && $result->parent_id == 0,
             ],
             [
                 'key' => 'inputForm',
@@ -82,6 +84,7 @@ class BrandsController extends WebController
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
                     ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
+                    ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
@@ -119,7 +122,7 @@ class BrandsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images') {
+                if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -132,6 +135,10 @@ class BrandsController extends WebController
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
+            }
+            if ($request->hasFile('banner')) {
+                $images = $request->file('banner');
+                $this->setMedia($images, $result->id, $this->module, true);
             }
             $response = [
                 'result' => $result,
@@ -164,6 +171,7 @@ class BrandsController extends WebController
         try {
             $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'banner');
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -196,7 +204,7 @@ class BrandsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if ($item != 'images' && $item != 'id') {
+                if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -211,6 +219,10 @@ class BrandsController extends WebController
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
+            }
+            if ($request->hasFile('banner')) {
+                $images = $request->file('banner');
+                $this->setMedia($images, $result->id, $this->module, true);
             }
             $response = [
                 'result' => $result,

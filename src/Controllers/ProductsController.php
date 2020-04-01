@@ -4,20 +4,19 @@ namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
+use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\Products as CurrentModel;
+use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Vintages;
-use Nksoft\Products\Models\Professionals;
-use Nksoft\Products\Models\CategoryProductsIndex;
 use Str;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
     /**
@@ -61,7 +60,7 @@ class ProductsController extends WebController
                 'formElement' => $this->formElement(),
                 'result' => null,
                 'formData' => $this->formData,
-                'module' => $this->module
+                'module' => $this->module,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -81,19 +80,19 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.professionals'),
                 'type' => 'select',
                 'defaultValue' => $professional,
-                'key' => 'professional'
+                'key' => 'professional',
             ],
             [
                 'label' => trans('nksoft::common.Rating'),
                 'type' => 'number',
                 'key' => 'rating',
-                'class' => 'col-12 col-lg-3'
+                'class' => 'col-12 col-lg-3',
             ],
             [
                 'label' => trans('nksoft::common.Content'),
                 'type' => 'textarea',
-                'key' => 'content'
-            ]
+                'key' => 'content',
+            ],
         ];
         return [
             [
@@ -117,8 +116,10 @@ class ProductsController extends WebController
                     ['key' => 'sku', 'label' => trans('nksoft::common.Sku'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
-                    ['key' => 'alcohol_content' , 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'smell', 'label' => trans('nksoft::common.Smell'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'text'],
+                    ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
@@ -129,7 +130,7 @@ class ProductsController extends WebController
                 'key' => 'professionals_rating',
                 'label' => trans('nksoft::common.Professional Rating'),
                 'element' => [
-                    ['key' => 'professionals_rating', 'label' => trans('nksoft::common.Button.Add'), 'data' => $custom, 'type' => 'custom']
+                    ['key' => 'professionals_rating', 'label' => trans('nksoft::common.Button.Add'), 'data' => $custom, 'type' => 'custom'],
                 ],
             ],
         ];
@@ -206,17 +207,21 @@ class ProductsController extends WebController
         }
     }
 
-    private function setCategoryProductsIndex(Request $request, $result) {
+    private function setCategoryProductsIndex(Request $request, $result)
+    {
         $categoryIds = \json_decode($request->get('categories_id'));
         $categoryProducts = CategoryProductsIndex::where(['products_id' => $result->id]);
         /** Delete record by category id not in list */
-        foreach($categoryProducts->get() as $categoryProduct) {
-            if(!in_array($categoryProduct->categories_id, $categoryIds)) $categoryProduct->forceDelete();
+        foreach ($categoryProducts->get() as $categoryProduct) {
+            if (!in_array($categoryProduct->categories_id, $categoryIds)) {
+                $categoryProduct->forceDelete();
+            }
+
         }
         /** Save new record */
         $existsItem = $categoryProducts->pluck('categories_id')->toArray();
-        foreach($categoryIds as $id) {
-            if(count($existsItem) == 0 || !in_array($id, $existsItem)) {
+        foreach ($categoryIds as $id) {
+            if (count($existsItem) == 0 || !in_array($id, $existsItem)) {
                 $categoryProductIndex = new CategoryProductsIndex();
                 $categoryProductIndex->products_id = $result->id;
                 $categoryProductIndex->categories_id = $id;
