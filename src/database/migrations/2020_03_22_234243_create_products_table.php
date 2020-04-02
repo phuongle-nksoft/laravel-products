@@ -22,6 +22,7 @@ class CreateProductsTable extends Migration
             $table->unsignedBigInteger('brands_id')->index('products_brands_id_index');
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
+            $table->integer('year_of_manufacture')->nullable()->default(1790);
             $table->decimal('price', 12, 2)->nullable()->default(0);
             $table->decimal('special_price', 12, 2)->nullable()->default(0);
             $table->decimal('alcohol_content', 12, 2)->nullable()->default(0);

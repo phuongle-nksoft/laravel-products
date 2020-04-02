@@ -16,7 +16,7 @@ use Str;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'professionals_rating', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'professionals_rating', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
     /**
@@ -120,6 +120,7 @@ class ProductsController extends WebController
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'smell', 'label' => trans('nksoft::common.Smell'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'text'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
+                    ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
