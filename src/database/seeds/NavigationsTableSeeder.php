@@ -20,6 +20,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'brands',
                 'icon' => 'nav-icon fas fa-book-reader',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 1,
             ],
             [
@@ -27,6 +28,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'regions',
                 'icon' => 'nav-icon fas fa-map-marked',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 2,
             ],
             [
@@ -34,6 +36,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'vintages',
                 'icon' => 'nav-icon fas fa-truck-moving',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 3,
             ],
             [
@@ -41,6 +44,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'professionals',
                 'icon' => 'nav-icon fas fa-user-shield',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 3,
             ],
             [
@@ -48,6 +52,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'categories',
                 'icon' => 'nav-icon far fa-folder',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 4,
             ],
             [
@@ -55,6 +60,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'products',
                 'icon' => 'nav-icon fas fa-store-alt',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
                 'order_by' => 5,
             ],
         ];
@@ -64,6 +70,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'customers',
                 'icon' => 'nav-icon fas fa-users',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2, 3]),
                 'order_by' => 1,
             ],
             [
@@ -71,6 +78,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'shippings',
                 'icon' => 'nav-icon fas fa-map-marker-alt',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2, 3]),
                 'order_by' => 2,
             ],
             [
@@ -78,6 +86,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'orders',
                 'icon' => 'nav-icon fas fa-luggage-cart',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2, 3]),
                 'order_by' => 3,
             ],
             [
@@ -85,6 +94,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'payment',
                 'icon' => 'nav-icon fas fa-file-invoice',
                 'is_active' => true,
+                'roles_id' => json_encode([1, 2, 3]),
                 'order_by' => 2,
             ],
         ];
@@ -95,6 +105,7 @@ class NavigationsTableSeeder extends Seeder
                 'icon' => '',
                 'is_active' => true,
                 'order_by' => 1,
+                'roles_id' => json_encode([1, 2]),
                 'child' => serialize($products),
             ],
             [
@@ -103,6 +114,7 @@ class NavigationsTableSeeder extends Seeder
                 'icon' => '',
                 'is_active' => true,
                 'order_by' => 2,
+                'roles_id' => json_encode([1, 2, 3]),
                 'child' => serialize($sales),
             ],
         ];

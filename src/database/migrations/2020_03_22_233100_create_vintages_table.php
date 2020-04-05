@@ -19,7 +19,7 @@ class CreateVintagesTable extends Migration
             $table->bigInteger('parent_id')->default(0);
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
-            $table->string('slug')->nullable();
+            $table->string('slug')->unique();
             $table->longText('description')->nullable();
             $table->string('video_id')->nullable();
             $table->text('meta_description')->nullable();

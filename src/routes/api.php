@@ -12,8 +12,9 @@ use Nksoft\Products\Controllers\RegionsController;
 use Nksoft\Products\Controllers\ShippingsController;
 use Nksoft\Products\Controllers\VintagesController;
 
-Route::group(['prefix' => 'api/admin', 'middleware' => 'api'], function () {
+Route::group(['prefix' => 'api/admin', 'middleware' => 'web'], function () {
     Route::resources([
+        '/' => CategoriesController::class,
         'categories' => CategoriesController::class,
         'products' => ProductsController::class,
         'customers' => CustomersController::class,

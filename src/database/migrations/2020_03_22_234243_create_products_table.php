@@ -31,7 +31,7 @@ class CreateProductsTable extends Migration
             $table->decimal('rate', 4, 2)->nullable()->default(0);
             $table->longText('description')->nullable();
             $table->longText('professionals_rating')->nullable();
-            $table->string('slug')->nullable();
+            $table->string('slug')->unique();
             $table->string('video_id')->nullable();
             $table->text('meta_description')->nullable();
             $table->softDeletes();

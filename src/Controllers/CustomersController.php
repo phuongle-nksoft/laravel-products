@@ -27,11 +27,13 @@ class CustomersController extends WebController
                 ['key' => 'email', 'label' => trans('nksoft::users.Email')],
             ];
             $select = Arr::pluck($columns, 'key');
-            $users = CurrentModel::select($select)->get();
+            $users = CurrentModel::select($select)->with(['histories'])->paginate();
+            $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $users,
                 'columns' => $columns,
                 'module' => $this->module,
+                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -200,7 +202,7 @@ class CustomersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if ($data['password'] !== $user->password) {
+            if ($data['password'] != 'undefined') {
                 $data['password'] = \Hash::make($data['password']);
             } else {
                 unset($data['password']);
@@ -232,7 +234,12 @@ class CustomersController extends WebController
     public function destroy($id)
     {
         try {
-            CurrentModel::find($id)->delete();
+            if (\Auth::user()->role_id == 1) {
+                CurrentModel::find($id)->delete();
+                $this->destroyHistories($id, $this->module);
+            } else {
+                $this->setHistories($id, $this->module);
+            }
             return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e);

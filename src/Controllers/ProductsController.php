@@ -34,11 +34,13 @@ class ProductsController extends WebController
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->get();
+            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,
                 'columns' => $columns,
                 'module' => $this->module,
+                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -323,7 +325,12 @@ class ProductsController extends WebController
     public function destroy($id)
     {
         try {
-            CurrentModel::find($id)->delete();
+            if (\Auth::user()->role_id == 1) {
+                CurrentModel::find($id)->delete();
+                $this->destroyHistories($id, $this->module);
+            } else {
+                $this->setHistories($id, $this->module);
+            }
             return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());

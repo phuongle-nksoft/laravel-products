@@ -18,7 +18,7 @@ class CreateBrandsTable extends Migration
             $table->string('name');
             $table->boolean('is_active')->nullable()->default(0);
             $table->integer('order_by')->nullable()->default(0);
-            $table->string('slug')->nullable();
+            $table->string('slug')->unique();
             $table->string('video_id')->nullable();
             $table->longText('description')->nullable();
             $table->text('meta_description')->nullable();
