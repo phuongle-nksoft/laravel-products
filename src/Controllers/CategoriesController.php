@@ -155,7 +155,7 @@ class CategoriesController extends WebController
             }
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, true);
+                $this->setMedia($images, $result->id, $this->module, 2);
             }
             $response = [
                 'result' => $result,
@@ -243,7 +243,7 @@ class CategoriesController extends WebController
             }
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, true);
+                $this->setMedia($images, $result->id, $this->module, 2);
             }
             $response = [
                 'result' => $result,

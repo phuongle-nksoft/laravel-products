@@ -50,6 +50,7 @@ class RegionsController extends WebController
     {
         try {
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'maps');
             \array_push($this->formData, 'banner');
             $response = [
                 'formElement' => $this->formElement(),
@@ -96,6 +97,7 @@ class RegionsController extends WebController
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
                     ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
+                    ['key' => 'maps', 'label' => trans('nksoft::common.Maps'), 'data' => null, 'type' => 'image'],
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
@@ -154,7 +156,11 @@ class RegionsController extends WebController
             }
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, true);
+                $this->setMedia($images, $result->id, $this->module, 2);
+            }
+            if ($request->hasFile('maps')) {
+                $images = $request->file('maps');
+                $this->setMedia($images, $result->id, $this->module, 3);
             }
             $response = [
                 'result' => $result,
@@ -187,6 +193,7 @@ class RegionsController extends WebController
         try {
             $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
             \array_push($this->formData, 'images');
+            \array_push($this->formData, 'maps');
             \array_push($this->formData, 'banner');
             $response = [
                 'formElement' => $this->formElement($result),
@@ -242,7 +249,11 @@ class RegionsController extends WebController
             }
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, true);
+                $this->setMedia($images, $result->id, $this->module, 2);
+            }
+            if ($request->hasFile('maps')) {
+                $images = $request->file('maps');
+                $this->setMedia($images, $result->id, $this->module, 3);
             }
             $response = [
                 'result' => $result,
