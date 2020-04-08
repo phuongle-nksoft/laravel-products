@@ -3,7 +3,6 @@
 namespace Nksoft\Products\Controllers;
 
 use Arr;
-use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Nksoft\Master\Controllers\WebController;
@@ -14,6 +13,8 @@ class BrandsController extends WebController
     private $formData = ['id', 'name', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
 
     protected $module = 'brands';
+
+    protected $model = CurrentModel::class;
     /**
      * Display a listing of the resource.
      *
@@ -224,27 +225,6 @@ class BrandsController extends WebController
                 'result' => $result,
             ];
             return $this->responseSuccess($response);
-        } catch (\Exception $e) {
-            return $this->responseError($e);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        try {
-            if (Auth::user()->role_id == 1) {
-                CurrentModel::find($id)->delete();
-                $this->destroyHistories($id, $this->module);
-            } else {
-                $history = $this->setHistories($id, $this->module);
-            }
-            return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e);
         }

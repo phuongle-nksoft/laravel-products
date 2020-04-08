@@ -4,7 +4,6 @@ namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Regions as CurrentModel;
 
@@ -13,6 +12,8 @@ class RegionsController extends WebController
     private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
 
     protected $module = 'regions';
+
+    protected $model = CurrentModel::class;
     /**
      * Display a listing of the resource.
      *
@@ -251,27 +252,6 @@ class RegionsController extends WebController
                 'result' => $result,
             ];
             return $this->responseSuccess($response);
-        } catch (\Exception $e) {
-            return $this->responseError($e);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        try {
-            if (\Auth::user()->role_id == 1) {
-                CurrentModel::find($id)->delete();
-                $this->destroyHistories($id, $this->module);
-            } else {
-                $this->setHistories($id, $this->module);
-            }
-            return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e);
         }

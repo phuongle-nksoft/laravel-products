@@ -6,13 +6,14 @@ use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Categories as CurrentModel;
-use Str;
 
 class CategoriesController extends WebController
 {
     private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'page_template', 'meta_description'];
 
     protected $module = 'categories';
+
+    protected $model = CurrentModel::class;
     /**
      * Display a listing of the resource.
      *
@@ -251,27 +252,6 @@ class CategoriesController extends WebController
                 'result' => $result,
             ];
             return $this->responseSuccess($response);
-        } catch (\Exception $e) {
-            return $this->responseError($e);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        try {
-            if (\Auth::user()->role_id == 1) {
-                CurrentModel::find($id)->delete();
-                $this->destroyHistories($id, $this->module);
-            } else {
-                $this->setHistories($id, $this->module);
-            }
-            return $this->responseSuccess();
         } catch (\Exception $e) {
             return $this->responseError($e);
         }

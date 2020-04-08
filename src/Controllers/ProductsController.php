@@ -12,13 +12,14 @@ use Nksoft\Products\Models\Products as CurrentModel;
 use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Vintages;
-use Str;
 
 class ProductsController extends WebController
 {
     private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'professionals_rating', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
+
+    protected $model = CurrentModel::class;
     /**
      * Display a listing of the resource.
      *
@@ -310,24 +311,4 @@ class ProductsController extends WebController
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        try {
-            if (\Auth::user()->role_id == 1) {
-                CurrentModel::find($id)->delete();
-                $this->destroyHistories($id, $this->module);
-            } else {
-                $this->setHistories($id, $this->module);
-            }
-            return $this->responseSuccess();
-        } catch (\Exception $e) {
-            return $this->responseError($e->getMessage());
-        }
-    }
 }
