@@ -190,11 +190,7 @@ class ProductsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if (!$data['slug']) {
-                $data['slug'] = $data['name'];
-            }
-
-            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
+            $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
             $this->setCategoryProductsIndex($request, $result);
             if ($request->hasFile('images')) {
@@ -293,11 +289,9 @@ class ProductsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            $data['slug'] = $this->getSlug($data);
             foreach ($data as $k => $v) {
                 $result->$k = $v;
-            }
-            if (!$data['slug']) {
-                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
             }
 
             $result->save();

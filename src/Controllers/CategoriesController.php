@@ -10,7 +10,7 @@ use Str;
 
 class CategoriesController extends WebController
 {
-    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'page_template', 'meta_description'];
 
     protected $module = 'categories';
     /**
@@ -63,6 +63,15 @@ class CategoriesController extends WebController
         }
     }
 
+    public function pageTemplate()
+    {
+        $pages = [];
+        foreach (config('nksoft.productTemplates') as $v => $k) {
+            $pages[] = ['id' => $k['id'], 'name' => trans('nksoft::common.layout.' . $k['name'])];
+        }
+        return $pages;
+    }
+
     private function formElement($result = null)
     {
         $categories = [
@@ -83,6 +92,7 @@ class CategoriesController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                    ['key' => 'page_template', 'label' => trans('nksoft::common.Layout Page'), 'data' => $this->pageTemplate(), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
@@ -142,12 +152,8 @@ class CategoriesController extends WebController
             if (!$data['parent_id']) {
                 $data['parent_id'] = 0;
             }
+            $data['slug'] = $this->getSlug($data);
 
-            if (!$data['slug']) {
-                $data['slug'] = $data['name'];
-            }
-
-            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
             $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
@@ -225,17 +231,13 @@ class CategoriesController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            foreach ($data as $k => $v) {
-                $result->$k = $v;
-            }
             if (!$data['parent_id']) {
                 $data['parent_id'] = 0;
             }
-
-            if (!$data['slug']) {
-                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
+            $data['slug'] = $this->getSlug($data);
+            foreach ($data as $k => $v) {
+                $result->$k = $v;
             }
-
             $result->save();
             if ($request->hasFile('images')) {
                 $images = $request->file('images');

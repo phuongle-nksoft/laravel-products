@@ -143,11 +143,7 @@ class VintagesController extends WebController
                 $data['parent_id'] = 0;
             }
 
-            if (!$data['slug']) {
-                $data['slug'] = $data['name'];
-            }
-
-            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
+            $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
@@ -225,15 +221,12 @@ class VintagesController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            foreach ($data as $k => $v) {
-                $result->$k = $v;
-            }
             if (!$data['parent_id']) {
                 $data['parent_id'] = 0;
             }
-
-            if (!$data['slug']) {
-                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
+            $data['slug'] = $this->getSlug($data);
+            foreach ($data as $k => $v) {
+                $result->$k = $v;
             }
 
             $result->save();

@@ -23,6 +23,7 @@ class CreateCategoriesTable extends Migration
             $table->string('video_id')->nullable();
             $table->longText('description')->nullable();
             $table->text('meta_description')->nullable();
+            $table->integer('page_template')->nullable()->default(1);
             $table->softDeletes();
             $table->timestamps();
         });

@@ -129,11 +129,7 @@ class BrandsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if (!$data['slug']) {
-                $data['slug'] = $data['name'];
-            }
-
-            $data['slug'] = Str::slug($data['slug'] . rand(100, strtotime('now')));
+            $data['slug'] = !$data['slug'] ? Str::slug($data['name'] . rand(100, strtotime('now')), '-') : Str::slug($data['slug']);
             $result = CurrentModel::create($data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
@@ -214,10 +210,7 @@ class BrandsController extends WebController
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
-            if (!$data['slug']) {
-                $data['slug'] = Str::slug($data['name'] . rand(100, strtotime('now')), '-');
-            }
-
+            $data['slug'] = !$data['slug'] ? Str::slug($data['name'] . rand(100, strtotime('now')), '-') : Str::slug($data['slug']);
             $result->save();
             if ($request->hasFile('images')) {
                 $images = $request->file('images');

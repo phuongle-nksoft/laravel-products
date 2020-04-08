@@ -7,7 +7,7 @@ use Nksoft\Master\Models\NksoftModel;
 class Categories extends NksoftModel
 {
     protected $table = 'categories';
-    protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'meta_description'];
+    protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'page_template','meta_description'];
     public function parentId()
     {
         return $this->belongsTo('\Nksoft\Products\Models\Categories', 'parent_id');
@@ -45,7 +45,6 @@ class Categories extends NksoftModel
      */
     public static function GetListByProduct($where, array $idSelected)
     {
-        // $parentId = $product ? $product->categoryProductIndies->pluck('categories_id') : 0;
         $data = array();
         $fs = self::where($where)->orderBy('order_by')->get();
         if ($fs) {
