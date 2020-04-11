@@ -193,6 +193,7 @@ class ProductsController extends WebController
             }
             $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
+            $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
@@ -296,6 +297,7 @@ class ProductsController extends WebController
             }
 
             $result->save();
+            $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');

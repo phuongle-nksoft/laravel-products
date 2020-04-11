@@ -146,6 +146,7 @@ class VintagesController extends WebController
 
             $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
+            $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -231,6 +232,7 @@ class VintagesController extends WebController
             }
 
             $result->save();
+            $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);

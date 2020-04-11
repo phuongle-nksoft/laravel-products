@@ -4,7 +4,6 @@ namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands as CurrentModel;
 
@@ -130,8 +129,9 @@ class BrandsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            $data['slug'] = !$data['slug'] ? Str::slug($data['name'] . rand(100, strtotime('now')), '-') : Str::slug($data['slug']);
+            $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
+            $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -211,8 +211,9 @@ class BrandsController extends WebController
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
-            $data['slug'] = !$data['slug'] ? Str::slug($data['name'] . rand(100, strtotime('now')), '-') : Str::slug($data['slug']);
+            $data['slug'] = $this->getSlug($data);
             $result->save();
+            $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);

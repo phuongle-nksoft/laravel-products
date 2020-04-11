@@ -16,7 +16,13 @@ Route::group(['middleware' => 'web'], function () {
             'regions' => WebController::class,
             'vintages' => WebController::class,
             'professionals' => WebController::class,
-            'regions' => WebController::class,
         ]);
     });
+});
+Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
+    Route::get('categories/{id}', 'CategoriesController@show')->name('categories');
+    Route::get('products/{id}', 'ProductsController@show')->name('products');
+    Route::get('brands/{id}', 'BrandsController@show')->name('brands');
+    Route::get('regions/{id}', 'RegionsController@show')->name('regions');
+    Route::get('vintages/{id}', 'VintagesController@show')->name('vintages');
 });
