@@ -6,6 +6,7 @@ use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Categories as CurrentModel;
+use Nksoft\Products\Models\CategoryProductsIndex;
 
 class CategoriesController extends WebController
 {
@@ -52,6 +53,7 @@ class CategoriesController extends WebController
         try {
             \array_push($this->formData, 'images');
             \array_push($this->formData, 'banner');
+            \array_push($this->formData, 'maps');
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -110,6 +112,7 @@ class CategoriesController extends WebController
                     ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
+                    ['key' => 'maps', 'label' => trans('nksoft::common.Icon'), 'data' => null, 'type' => 'image'],
                 ],
             ],
         ];
@@ -165,6 +168,10 @@ class CategoriesController extends WebController
                 $images = $request->file('banner');
                 $this->setMedia($images, $result->id, $this->module, 2);
             }
+            if ($request->hasFile('maps')) {
+                $images = $request->file('maps');
+                $this->setMedia($images, $result->id, $this->module, 3);
+            }
             $response = [
                 'result' => $result,
             ];
@@ -182,7 +189,28 @@ class CategoriesController extends WebController
      */
     public function show($id)
     {
-        return view('master::layout');
+        try {
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $products = CategoryProductsIndex::select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->with(['products']);
+            $response = [
+                'result' => $result,
+                'products' => $products->paginate(),
+                'total' => $products->count(),
+                'banner' => $result->images()->where(['group_id' => 2])->first(),
+                'template' => 'products',
+                'breadcrumb' => [
+                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $result->name],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
+        }
     }
 
     /**
@@ -197,6 +225,7 @@ class CategoriesController extends WebController
             $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
             \array_push($this->formData, 'images');
             \array_push($this->formData, 'banner');
+            \array_push($this->formData, 'maps');
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -249,6 +278,10 @@ class CategoriesController extends WebController
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
                 $this->setMedia($images, $result->id, $this->module, 2);
+            }
+            if ($request->hasFile('maps')) {
+                $images = $request->file('maps');
+                $this->setMedia($images, $result->id, $this->module, 3);
             }
             $response = [
                 'result' => $result,

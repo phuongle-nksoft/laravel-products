@@ -9,9 +9,16 @@ class Regions extends NksoftModel
     protected $table = 'regions';
     protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'meta_description'];
 
-    public function parentId()
+    public function parent()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Regions', 'parent_id');
+        return $this->belongsTo('\Nksoft\Products\Models\Regions', 'parent_id')->select(['id', 'name', 'parent_id', 'slug']);
+    }
+
+    public function products()
+    {
+        return $this->hasMany('\Nksoft\Products\Models\Products', 'regions_id')->where(['is_active' => 1])
+            ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+            ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions']);
     }
 
     /**

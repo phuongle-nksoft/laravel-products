@@ -172,7 +172,27 @@ class VintagesController extends WebController
      */
     public function show($id)
     {
-        return view('master::layout');
+        try {
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images', 'products'])->where(['is_active' => 1, 'id' => $id])->first();
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $products = $result->products();
+            $response = [
+                'result' => $result,
+                'products' => $result->products()->paginate(),
+                'total' => $result->products()->count(),
+                'banner' => $result->images()->where(['group_id' => 2])->first(),
+                'template' => 'products',
+                'breadcrumb' => [
+                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $result->name],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
+        }
     }
 
     /**

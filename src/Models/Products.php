@@ -7,25 +7,25 @@ use Nksoft\Master\Models\NksoftModel;
 class Products extends NksoftModel
 {
     protected $table = 'products';
-    protected $fillable = ['id', 'name', 'categories_id', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
+    protected $fillable = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
 
     public function categoryProductIndies()
     {
-        return $this->hasMany('\Nksoft\Products\Models\CategoryProductsIndex', 'products_id');
+        return $this->hasMany('\Nksoft\Products\Models\CategoryProductsIndex', 'products_id')->with(['categories']);
     }
 
     public function vintages()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Vintages');
+        return $this->belongsTo('\Nksoft\Products\Models\Vintages')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id']);
     }
 
     public function brands()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Brands');
+        return $this->belongsTo('\Nksoft\Products\Models\Brands')->with(['images'])->select(['id', 'name', 'is_active', 'order_by', 'slug', 'video_id', 'description']);
     }
 
     public function regions()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Regions');
+        return $this->belongsTo('\Nksoft\Products\Models\Regions')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id']);
     }
 }

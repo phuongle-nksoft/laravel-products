@@ -17,3 +17,6 @@ Route::group(['prefix' => 'api/admin', 'middleware' => 'web', 'namespace' => 'Nk
         'regions' => RegionsController::class,
     ]);
 });
+Route::group(['prefix' => 'api', 'namespace' => 'Nksoft\Products\Controllers'], function () {
+    Route::get('products/list-filter', 'ProductsController@listFilter')->name('product-list-filter');
+});

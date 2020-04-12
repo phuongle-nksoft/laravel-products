@@ -103,10 +103,10 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'multiple' => true, 'type' => 'tree'],
-                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'type' => 'tree'],
-                    ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'type' => 'tree'],
-                    ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'type' => 'select'],
+                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
+                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
@@ -239,7 +239,28 @@ class ProductsController extends WebController
      */
     public function show($id)
     {
-        return view('master::layout');
+        try {
+            $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
+                ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions'])->first();
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $response = [
+                'result' => $result,
+                'brands' => $result->brands->products()->paginate(),
+                'vintages' => $result->vintages->products()->paginate(),
+                'regions' => $result->regions->products()->paginate(),
+                'template' => 'product-detail',
+                'breadcrumb' => [
+                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $result->name],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
+        }
     }
 
     /**
@@ -308,9 +329,13 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            dd($e->getMessage());
             return $this->responseError($e->getMessage());
         }
+    }
+
+    public function listFilter()
+    {
+        dd('list');
     }
 
 }

@@ -5,6 +5,7 @@ namespace Nksoft\Products\Controllers;
 use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\Regions as CurrentModel;
 
 class RegionsController extends WebController
@@ -177,7 +178,28 @@ class RegionsController extends WebController
      */
     public function show($id)
     {
-        return view('master::layout');
+        try {
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $products = Products::where(['regions_id' => $id, 'is_active' => 1])->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions']);
+            $response = [
+                'result' => $result,
+                'products' => $products->paginate(),
+                'total' => $products->count(),
+                'banner' => $result->images()->where(['group_id' => 2])->first(),
+                'template' => 'products',
+                'breadcrumb' => [
+                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $result->name],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
+        }
     }
 
     /**

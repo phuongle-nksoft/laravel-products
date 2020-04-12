@@ -7,10 +7,15 @@ use Nksoft\Master\Models\NksoftModel;
 class Categories extends NksoftModel
 {
     protected $table = 'categories';
-    protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'page_template','meta_description'];
+    protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'page_template', 'meta_description'];
     public function parentId()
     {
         return $this->belongsTo('\Nksoft\Products\Models\Categories', 'parent_id');
+    }
+
+    public function categoryProductIndies()
+    {
+        return $this->hasMany('\Nksoft\Products\Models\CategoryProductsIndex', 'categories_id')->with(['products']);
     }
     /**
      * Get list category with recursive
