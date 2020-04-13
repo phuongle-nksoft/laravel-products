@@ -27,7 +27,7 @@ class CreateProductsTable extends Migration
             $table->decimal('special_price', 12, 2)->nullable()->default(0);
             $table->decimal('alcohol_content', 12, 2)->nullable()->default(0);
             $table->decimal('volume', 12, 2)->nullable()->default(0);
-            $table->string('smell')->nullable();
+            $table->longText('smell')->nullable();
             $table->decimal('rate', 4, 2)->nullable()->default(0);
             $table->longText('description')->nullable();
             $table->longText('professionals_rating')->nullable();
