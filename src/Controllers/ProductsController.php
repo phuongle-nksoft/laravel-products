@@ -9,13 +9,14 @@ use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\Products as CurrentModel;
+use Nksoft\Products\Models\ProfessionalRatings;
 use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Vintages;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'professionals_rating', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
 
@@ -59,6 +60,7 @@ class ProductsController extends WebController
         try {
             \array_push($this->formData, 'images');
             \array_push($this->formData, 'categories_id');
+            \array_push($this->formData, 'professionals_rating');
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -83,18 +85,18 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.professionals'),
                 'type' => 'select',
                 'defaultValue' => $professional,
-                'key' => 'professional',
+                'key' => 'professionals_id',
             ],
             [
                 'label' => trans('nksoft::common.Rating'),
                 'type' => 'number',
-                'key' => 'rating',
+                'key' => 'ratings',
                 'class' => 'col-12 col-lg-3',
             ],
             [
                 'label' => trans('nksoft::common.Content'),
                 'type' => 'textarea',
-                'key' => 'content',
+                'key' => 'description',
             ],
         ];
         return [
@@ -195,6 +197,7 @@ class ProductsController extends WebController
             $result = CurrentModel::create($data);
             $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
+            $this->setProfessionalRating($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -240,20 +243,34 @@ class ProductsController extends WebController
     public function show($id)
     {
         try {
+            $select = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
+            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
-                ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
-                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions'])->first();
+                ->select($select)
+                ->with($with)->first();
             if (!$result) {
                 return $this->responseError('404');
             }
+            $brands = CurrentModel::where(['is_active' => 1, 'brands_id' => $result->brands_id])->where('id', '<>', $id)
+                ->select($select)
+                ->orderBy('updated_at', 'desc')
+                ->with($with)->paginate();
+            $vintages = CurrentModel::where(['is_active' => 1, 'vintages_id' => $result->vintages_id])->where('id', '<>', $id)
+                ->select($select)
+                ->orderBy('updated_at', 'desc')
+                ->with($with)->paginate();
+            $regions = CurrentModel::where(['is_active' => 1, 'regions_id' => $result->regions_id])->where('id', '<>', $id)
+                ->select($select)
+                ->orderBy('updated_at', 'desc')
+                ->with($with)->paginate();
             $response = [
                 'result' => $result,
-                'brands' => $result->brands->products()->paginate(),
-                'vintages' => $result->vintages->products()->paginate(),
-                'regions' => $result->regions->products()->paginate(),
+                'brands' => $brands,
+                'vintages' => $vintages,
+                'regions' => $regions,
                 'template' => 'product-detail',
                 'breadcrumb' => [
-                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['link' => url('/'), 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];
@@ -272,9 +289,10 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies'])->find($id);
+            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating'])->find($id);
             \array_push($this->formData, 'images');
             \array_push($this->formData, 'categories_id');
+            \array_push($this->formData, 'professionals_rating');
             $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
             $response = [
                 'formElement' => $this->formElement($result),
@@ -320,6 +338,7 @@ class ProductsController extends WebController
             $result->save();
             $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
+            $this->setProfessionalRating($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -330,6 +349,34 @@ class ProductsController extends WebController
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());
+        }
+    }
+
+    public function setProfessionalRating($request, $result)
+    {
+        $professionalRating = \json_decode($request->get('professionals_rating'));
+        $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
+        $dataProducts = ProfessionalRatings::where(['products_id' => $result->id]);
+        /** Delete record by category id not in list */
+        foreach ($dataProducts->get() as $data) {
+            if (!in_array($data->professionals_id, $professionalIds)) {
+                $data->forceDelete();
+            }
+
+        }
+        /** Save new record */
+        $existsItem = $dataProducts->pluck('professionals_id')->toArray();
+        foreach ($professionalRating as $data) {
+            if (count($existsItem) == 0 || !in_array($data->professionals_id, $existsItem)) {
+                $rating = new ProfessionalRatings();
+            } else {
+                $rating = $dataProducts->where(['professionals_id' => $data->professionals_id])->first();
+            }
+            $rating->products_id = $result->id;
+            $rating->professionals_id = $data->professionals_id;
+            $rating->description = $data->description;
+            $rating->ratings = $data->ratings;
+            $rating->save();
         }
     }
 

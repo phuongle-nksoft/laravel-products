@@ -9,7 +9,7 @@ use Nksoft\Products\Models\Professionals as CurrentModel;
 
 class ProfessionalsController extends WebController
 {
-    private $formData = ['id', 'name', 'description'];
+    private $formData = ['id', 'name', 'short_name', 'description'];
 
     protected $module = 'professionals';
 
@@ -25,6 +25,7 @@ class ProfessionalsController extends WebController
             $columns = [
                 ['key' => 'id', 'label' => 'Id'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
+                ['key' => 'short_name', 'label' => trans('nksoft::common.Short Name')],
             ];
             $select = Arr::pluck($columns, 'key');
             $results = CurrentModel::select($select)->with(['histories'])->paginate();
@@ -70,6 +71,7 @@ class ProfessionalsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'short_name', 'label' => trans('nksoft::common.Short Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                 ],
                 'active' => true,
@@ -81,6 +83,7 @@ class ProfessionalsController extends WebController
     {
         $rules = [
             'name' => 'required',
+            'short_name' => 'required',
         ];
 
         return $rules;
@@ -90,6 +93,7 @@ class ProfessionalsController extends WebController
     {
         return [
             'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
+            'short_name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Short Name')]),
         ];
     }
     /**

@@ -183,8 +183,8 @@ class RegionsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['regions_id' => $id, 'is_active' => 1])->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
-                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions']);
+            $products = Products::where(['regions_id' => $id, 'is_active' => 1])->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -192,7 +192,7 @@ class RegionsController extends WebController
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',
                 'breadcrumb' => [
-                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];

@@ -203,7 +203,7 @@ class CategoriesController extends WebController
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',
                 'breadcrumb' => [
-                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];

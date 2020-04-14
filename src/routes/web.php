@@ -18,6 +18,10 @@ Route::group(['middleware' => 'web'], function () {
             'professionals' => WebController::class,
         ]);
     });
+    Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
+        Route::post('add-cart', 'OrdersController@addCart')->name('add-cart');
+        Route::get('get-cart', 'OrdersController@getCart')->name('get-cart');
+    });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
     Route::get('categories/{id}', 'CategoriesController@show')->name('categories');
@@ -25,4 +29,5 @@ Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
     Route::get('brands/{id}', 'BrandsController@show')->name('brands');
     Route::get('regions/{id}', 'RegionsController@show')->name('regions');
     Route::get('vintages/{id}', 'VintagesController@show')->name('vintages');
+    // Route::post('add-cart', 'OrdersController@addCart')->name('add-cart');
 });

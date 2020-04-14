@@ -5,6 +5,7 @@ namespace Nksoft\Products\Controllers;
 use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\Vintages as CurrentModel;
 
 class VintagesController extends WebController
@@ -173,19 +174,20 @@ class VintagesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images', 'products'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = $result->products();
+            $products = Products::where(['vintages_id' => $id, 'is_active' => 1])->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $response = [
                 'result' => $result,
-                'products' => $result->products()->paginate(),
-                'total' => $result->products()->count(),
+                'products' => $products->paginate(),
+                'total' => $products->count(),
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',
                 'breadcrumb' => [
-                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];

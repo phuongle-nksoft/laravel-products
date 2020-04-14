@@ -17,8 +17,8 @@ class Vintages extends NksoftModel
     public function products()
     {
         return $this->hasMany('\Nksoft\Products\Models\Products', 'vintages_id')->where(['is_active' => 1])
-            ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
-            ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions']);
+            ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+            ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
     }
 
     /**

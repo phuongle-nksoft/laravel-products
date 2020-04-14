@@ -7,7 +7,7 @@ use Nksoft\Master\Models\NksoftModel;
 class Products extends NksoftModel
 {
     protected $table = 'products';
-    protected $fillable = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'professionals_rating', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
+    protected $fillable = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
 
     public function categoryProductIndies()
     {
@@ -27,5 +27,10 @@ class Products extends NksoftModel
     public function regions()
     {
         return $this->belongsTo('\Nksoft\Products\Models\Regions')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id']);
+    }
+
+    public function professionalsRating()
+    {
+        return $this->hasMany('\Nksoft\Products\Models\ProfessionalRatings', 'products_id')->with(['professional'])->select(['id', 'professionals_id', 'products_id', 'description', 'ratings']);
     }
 }
