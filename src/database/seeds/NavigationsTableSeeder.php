@@ -68,7 +68,7 @@ class NavigationsTableSeeder extends Seeder
             [
                 'title' => 'Promotions',
                 'link' => 'promotions',
-                'icon' => 'nav-icon fas fa-map-marker-alt',
+                'icon' => 'nav-icon fas fa-percentage',
                 'is_active' => true,
                 'roles_id' => json_encode([1, 2]),
                 'order_by' => 2,

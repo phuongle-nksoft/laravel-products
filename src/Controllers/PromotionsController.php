@@ -5,8 +5,8 @@ namespace Nksoft\Products\Controllers;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Products;
-use Validator;
 use Nksoft\Products\Models\Promotions as CurrentModel;
+use Validator;
 
 class PromotionsController extends WebController
 {
@@ -29,7 +29,7 @@ class PromotionsController extends WebController
                 ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
             ];
-            $select = collect($columns)->pluck('key');
+            $select = collect($columns)->pluck('key')->toArray();
             $results = CurrentModel::select($select)->with(['histories'])->paginate();
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
@@ -83,14 +83,13 @@ class PromotionsController extends WebController
                 'key' => 'inputForm',
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
-                    ['key' => 'coupon_type', 'label' => trans('nksoft::products.Coupon Type'), 'data' => null, 'class' => 'col-md-3 nk-check', 'type' => 'checkbox'],
+                    ['key' => 'coupon_type', 'label' => trans('nksoft::products.Coupon Type'), 'data' => $this->status(), 'class' => 'col-md-3', 'type' => 'select'],
                     ['key' => 'code', 'label' => trans('nksoft::products.Code'), 'data' => null, 'type' => 'text'],
                     ['key' => 'simple_action', 'label' => trans('nksoft::products.Simple Action'), 'data' => $simpleAction, 'type' => 'select'],
                     ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'type' => 'number'],
                     ['key' => 'start_date', 'label' => trans('nksoft::products.From Date'), 'data' => null, 'type' => 'date'],
                     ['key' => 'expice_date', 'label' => trans('nksoft::products.To Date'), 'data' => null, 'type' => 'date'],
                     ['key' => 'discount_qty', 'label' => trans('nksoft::products.Discount Qty'), 'data' => null, 'type' => 'number'],
-                    ['key' => 'product_ids', 'label' => trans('nksoft::products.Product Ids'), 'data' => null, 'type' => 'textarea'],
                 ],
             ],
         ];
@@ -111,6 +110,7 @@ class PromotionsController extends WebController
             'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
         ];
     }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -129,6 +129,15 @@ class PromotionsController extends WebController
                 if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
+            }
+            if (!$data['coupon_type']) {
+                $data['coupon_type'] = 0;
+            }
+            if ($this->validateDate($data['start_date'])) {
+                $data['start_date'] = date('Y-m-d', strtotime($data['start_date']));
+            }
+            if ($this->validateDate($data['expice_date'])) {
+                $data['expice_date'] = date('Y-m-d', strtotime($data['expice_date']));
             }
             $result = CurrentModel::create($data);
             $response = [
@@ -161,6 +170,8 @@ class PromotionsController extends WebController
     {
         try {
             $result = CurrentModel::select($this->formData)->find($id);
+            $result->start_date = $result->start_date ? date('d/m/Y', \strtotime($result->start_date)) : '';
+            $result->expice_date = $result->expice_date ? date('d/m/Y', \strtotime($result->expice_date)) : '';
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -196,6 +207,15 @@ class PromotionsController extends WebController
                 if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
+            }
+            if (!$data['coupon_type']) {
+                $data['coupon_type'] = 0;
+            }
+            if ($this->validateDate($data['start_date'])) {
+                $data['start_date'] = date('Y-m-d', strtotime($data['start_date']));
+            }
+            if ($this->validateDate($data['expice_date'])) {
+                $data['expice_date'] = date('Y-m-d', strtotime($data['expice_date']));
             }
             foreach ($data as $k => $v) {
                 $result->$k = $v;

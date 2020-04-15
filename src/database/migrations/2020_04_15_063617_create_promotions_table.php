@@ -20,8 +20,8 @@ class CreatePromotionsTable extends Migration
             $table->boolean('coupon_type')->default(0);
             $table->smallInteger('simple_action')->default(1);
             $table->decimal('discount_amount', 12, 2);
-            $table->timestamp('expice_date')->nullable();
-            $table->timestamp('start_date')->nullable();
+            $table->date('expice_date')->nullable();
+            $table->date('start_date')->nullable();
             $table->boolean('is_active');
             $table->integer('discount_qty')->default(10000)->nullable();
             $table->longText('product_ids')->nullable();
