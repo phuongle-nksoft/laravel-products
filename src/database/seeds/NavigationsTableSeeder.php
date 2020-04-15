@@ -66,20 +66,20 @@ class NavigationsTableSeeder extends Seeder
         ];
         $sales = [
             [
+                'title' => 'Promotions',
+                'link' => 'promotions',
+                'icon' => 'nav-icon fas fa-map-marker-alt',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 2,
+            ],
+            [
                 'title' => 'Customers',
                 'link' => 'customers',
                 'icon' => 'nav-icon fas fa-users',
                 'is_active' => true,
                 'roles_id' => json_encode([1, 2, 3]),
                 'order_by' => 1,
-            ],
-            [
-                'title' => 'Shippings',
-                'link' => 'shippings',
-                'icon' => 'nav-icon fas fa-map-marker-alt',
-                'is_active' => true,
-                'roles_id' => json_encode([1, 2, 3]),
-                'order_by' => 2,
             ],
             [
                 'title' => 'Orders',

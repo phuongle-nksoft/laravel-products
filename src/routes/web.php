@@ -16,11 +16,13 @@ Route::group(['middleware' => 'web'], function () {
             'regions' => WebController::class,
             'vintages' => WebController::class,
             'professionals' => WebController::class,
+            'promotions' => WebController::class,
         ]);
     });
     Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
         Route::post('add-cart', 'OrdersController@addCart')->name('add-cart');
         Route::get('get-cart', 'OrdersController@getCart')->name('get-cart');
+        Route::delete('delete-cart/{rowId}', 'OrdersController@deteleCart')->name('delete-cart');
     });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

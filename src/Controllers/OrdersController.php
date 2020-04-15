@@ -92,7 +92,7 @@ class OrdersController extends WebController
             return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
         }
         $qty = $request->get('qty');
-        $select = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price'];
+        $select = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug'];
         $with = ['images', 'vintages', 'brands', 'regions', 'professionalsRating'];
         $product = Products::select($select)->where(['id' => $request->get('productId'), 'is_active' => 1])->with($with)->first();
         if (!$product) {
@@ -112,6 +112,7 @@ class OrdersController extends WebController
             'vintages' => $product->vintages,
             'regions' => $product->regions,
             'brands' => $product->brands,
+            'slug' => $product->slug
         );
         if (!$allCarts) {
             $allCarts = [];
@@ -136,6 +137,13 @@ class OrdersController extends WebController
     public function getCart()
     {
         $allCarts = request()->session()->get(config('nksoft.addCart')) ?? [];
+        return $this->responseViewSuccess($allCarts);
+    }
+
+    public function deteleCart($rowId) {
+        $allCarts = request()->session()->get(config('nksoft.addCart')) ?? [];
+        $allCarts = collect($allCarts)->where('rowId', '<>', $rowId)->toArray();
+        request()->session()->put(config('nksoft.addCart'), $allCarts);
         return $this->responseViewSuccess($allCarts);
     }
 }
