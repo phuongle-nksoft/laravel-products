@@ -7,6 +7,7 @@ use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
 use \Arr;
 use \Auth;
+use Socialite;
 
 class CustomersController extends WebController
 {
@@ -252,10 +253,11 @@ class CustomersController extends WebController
 
     public function loginSerices($service)
     {
-        dd($service);
+        return Socialite::driver($service)->redirect();
     }
     public function callback($service)
     {
-        dd($service);
+        $user = Socialite::driver('github')->user();
+        dd($user);
     }
 }
