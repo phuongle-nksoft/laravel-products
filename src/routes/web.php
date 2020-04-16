@@ -23,8 +23,12 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('add-cart', 'OrdersController@addCart')->name('add-cart');
         Route::get('get-cart', 'OrdersController@getCart')->name('get-cart');
         Route::delete('delete-cart/{rowId}', 'OrdersController@deteleCart')->name('delete-cart');
+        Route::post('discount', 'OrdersController@discount');
         Route::get('login/{service}/callback', 'CustomersController@callback');
         Route::get('login/{service}', 'CustomersController@loginSerices');
+        Route::post('customers/login', 'CustomersController@login');
+        Route::post('customers/register', 'CustomersController@store');
+        Route::get('logout', 'CustomersController@logout');
     });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

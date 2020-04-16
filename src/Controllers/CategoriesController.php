@@ -190,7 +190,7 @@ class CategoriesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'page_template'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             $listIds = CurrentModel::GetListIds(['id' => $id]);
             if (!$result) {
                 return $this->responseError('404');

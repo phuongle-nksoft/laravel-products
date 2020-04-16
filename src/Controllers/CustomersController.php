@@ -3,11 +3,10 @@
 namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
 use \Arr;
-use \Auth;
-use Socialite;
 
 class CustomersController extends WebController
 {
@@ -92,8 +91,7 @@ class CustomersController extends WebController
     private function rules($id = 0)
     {
         $rules = [
-            'name' => 'required',
-            'email' => 'required|email',
+            'email' => 'email|unique:customers',
             'images[]' => 'file',
         ];
         if ($id == 0) {
@@ -106,9 +104,9 @@ class CustomersController extends WebController
     private function message()
     {
         return [
-            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::Users.Username')]),
             'email.required' => __('nksoft::message.Field is require!', ['Field' => 'Email']),
             'email.email' => __('nksoft::message.Email is incorrect!'),
+            'email.unique' => __('nksoft::message.Field is duplicate', ['Field' => 'Email']),
             'password.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::login.Password')]),
             'password.min' => __('nksoft::message.Field more than number letter!', ['Field' => trans('nksoft::login.Password'), 'number' => 6]),
         ];
@@ -133,17 +131,20 @@ class CustomersController extends WebController
                 }
             }
             $data['password'] = \Hash::make($data['password']);
+            $data['is_active'] = 1;
+            $data['reset_password'] = $data['phone'];
             $user = CurrentModel::create($data);
+            session()->put('user', $user);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $user->id, $this->module);
             }
             $response = [
-                'result' => $user,
+                'user' => $user,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError([__('nksoft::message.Field is duplicate', ['Field' => 'Email'])]);
         }
     }
 
@@ -210,6 +211,8 @@ class CustomersController extends WebController
             } else {
                 unset($data['password']);
             }
+            $data['reset_password'] = $data['phone'];
+
             foreach ($data as $k => $v) {
                 $user->$k = $v;
             }
@@ -230,25 +233,27 @@ class CustomersController extends WebController
 
     public function login(Request $request)
     {
-        $validator = Validator($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|min:6|max:32',
-        ]);
+        $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
-            return redirect()->back()->withErrors([trans('nksoft::login.Email or password is incorrect!')], 'login');
+            return $this->responseError($validator->errors());
         }
 
-        $credentials = $request->only('email', 'password', 'active');
-        if (Auth::attempt($credentials)) {
-            return redirect()->to('admin');
+        $credentials = $request->only('email', 'password');
+        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'reset_password'])->where(['email' => $credentials['email']])->with('shipping')->first();
+        if (!$customer) {
+            return $this->responseError([trans('nksoft::message.Account is incorrect!')]);
         }
-        return redirect()->back()->withErrors([trans('nksoft::login.Email or password is incorrect!')], 'login');
+        if (\Hash::check($credentials['password'], $customer->password)) {
+            session()->put('user', $customer);
+            return $this->responseViewSuccess(['user' => $customer]);
+        }
+        return $this->responseError([trans('nksoft::login.Email or password is incorrect!')]);
     }
 
     public function logout()
     {
-        Auth::logout();
-        return redirect()->to('login');
+        session()->forget('user');
+        return redirect()->to('/');
     }
 
     public function loginSerices($service)

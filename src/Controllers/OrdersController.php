@@ -5,6 +5,7 @@ namespace Nksoft\Products\Controllers;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Products;
+use Nksoft\Products\Models\Promotions;
 use Validator;
 
 class OrdersController extends WebController
@@ -112,7 +113,8 @@ class OrdersController extends WebController
             'vintages' => $product->vintages,
             'regions' => $product->regions,
             'brands' => $product->brands,
-            'slug' => $product->slug
+            'slug' => $product->slug,
+            'discount' => 0,
         );
         if (!$allCarts) {
             $allCarts = [];
@@ -140,10 +142,23 @@ class OrdersController extends WebController
         return $this->responseViewSuccess($allCarts);
     }
 
-    public function deteleCart($rowId) {
+    public function deteleCart($rowId)
+    {
         $allCarts = request()->session()->get(config('nksoft.addCart')) ?? [];
         $allCarts = collect($allCarts)->where('rowId', '<>', $rowId)->toArray();
         request()->session()->put(config('nksoft.addCart'), $allCarts);
         return $this->responseViewSuccess($allCarts);
+    }
+
+    public function discount(Request $request)
+    {
+        $cart = session()->get(config('nksoft.addCart'));
+        $code = $request->get('code');
+        $today = Date('Y-m-d');
+        $promotion = Promotions::select(['code', 'simple_action', 'discount_amount'])->where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null)', $today)->where('start_date', '<=', $today)->first();
+        if (!$promotion) {
+            return $this->responseError(['Mã code không hợp lệ']);
+        }
+        return $this->responseViewSuccess(['discount' => $promotion]);
     }
 }
