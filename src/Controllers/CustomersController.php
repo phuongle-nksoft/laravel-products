@@ -249,4 +249,13 @@ class CustomersController extends WebController
         Auth::logout();
         return redirect()->to('login');
     }
+
+    public function loginSerices($service)
+    {
+        dd($service);
+    }
+    public function callback($service)
+    {
+        dd($service);
+    }
 }
