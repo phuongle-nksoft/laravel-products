@@ -13,6 +13,6 @@ class Customers extends NksoftModel
 
     public function shipping()
     {
-        return $this->hasMany(Shipping::class, 'customers_id');
+        return $this->hasMany(Shipping::class, 'customers_id')->select(['id', 'customers_id', 'address', 'phone', 'name', 'company', 'is_default', 'note'])->orderBy('id', 'desc');
     }
 }

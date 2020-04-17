@@ -3,11 +3,11 @@
 namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
 use \Arr;
-use Illuminate\Support\Facades\Hash;
 
 class CustomersController extends WebController
 {
@@ -123,7 +123,7 @@ class CustomersController extends WebController
     {
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            return $this->responseError($validator->errors());
         }
         try {
             $data = [];
@@ -266,12 +266,12 @@ class CustomersController extends WebController
         $email = $user->getEmail();
         $name = $user->getName();
         $customer = CurrentModel::where(['email' => $user->getEmail()])->with(['shipping'])->first();
-        if(!$customer) {
+        if (!$customer) {
             $customer = CurrentModel::create([
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make('social'),
-                'is_active' => 1
+                'is_active' => 1,
             ]);
         }
         session()->put('user', $customer);

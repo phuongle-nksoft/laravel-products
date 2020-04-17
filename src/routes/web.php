@@ -29,6 +29,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('customers/login', 'CustomersController@login');
         Route::post('customers/register', 'CustomersController@store');
         Route::get('logout', 'CustomersController@logout');
+        Route::post('shippings', 'ShippingsController@store');
     });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
