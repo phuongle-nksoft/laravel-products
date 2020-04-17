@@ -7,6 +7,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
 use \Arr;
+use Illuminate\Support\Facades\Hash;
 
 class CustomersController extends WebController
 {
@@ -91,10 +92,11 @@ class CustomersController extends WebController
     private function rules($id = 0)
     {
         $rules = [
-            'email' => 'email|unique:customers',
+            'email' => 'email',
             'images[]' => 'file',
         ];
         if ($id == 0) {
+            $rules['email'] = 'email | unique:customers';
             $rules['password'] = 'required|min:6';
         }
 
@@ -132,7 +134,6 @@ class CustomersController extends WebController
             }
             $data['password'] = \Hash::make($data['password']);
             $data['is_active'] = 1;
-            $data['reset_password'] = $data['phone'];
             $user = CurrentModel::create($data);
             session()->put('user', $user);
             if ($request->hasFile('images')) {
@@ -144,7 +145,7 @@ class CustomersController extends WebController
             ];
             return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
         } catch (\Exception $e) {
-            return $this->responseError([__('nksoft::message.Field is duplicate', ['Field' => 'Email'])]);
+            return $this->responseError([__('nksoft::message.Field is duplicate', ['Field' => 'Email']), $e->getMessage()]);
         }
     }
 
@@ -211,7 +212,6 @@ class CustomersController extends WebController
             } else {
                 unset($data['password']);
             }
-            $data['reset_password'] = $data['phone'];
 
             foreach ($data as $k => $v) {
                 $user->$k = $v;
@@ -233,13 +233,13 @@ class CustomersController extends WebController
 
     public function login(Request $request)
     {
-        $validator = Validator($request->all(), $this->rules(), $this->message());
+        $validator = Validator($request->all(), $this->rules(true), $this->message());
         if ($validator->fails()) {
             return $this->responseError($validator->errors());
         }
 
         $credentials = $request->only('email', 'password');
-        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'reset_password'])->where(['email' => $credentials['email']])->with('shipping')->first();
+        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'phone'])->where(['email' => $credentials['email']])->with('shipping')->first();
         if (!$customer) {
             return $this->responseError([trans('nksoft::message.Account is incorrect!')]);
         }
@@ -262,7 +262,19 @@ class CustomersController extends WebController
     }
     public function callback($service)
     {
-        $user = Socialite::driver('github')->user();
-        dd($user);
+        $user = Socialite::driver($service)->user();
+        $email = $user->getEmail();
+        $name = $user->getName();
+        $customer = CurrentModel::where(['email' => $user->getEmail()])->with(['shipping'])->first();
+        if(!$customer) {
+            $customer = CurrentModel::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => Hash::make('social'),
+                'is_active' => 1
+            ]);
+        }
+        session()->put('user', $customer);
+        return $this->responseViewSuccess(['user' => $customer]);
     }
 }

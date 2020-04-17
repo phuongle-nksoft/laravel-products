@@ -8,7 +8,7 @@ use Nksoft\Products\Models\Shipping;
 class Customers extends NksoftModel
 {
     protected $table = 'customers';
-    protected $fillable = ['id', 'name', 'is_active', 'password', 'email'];
+    protected $fillable = ['id', 'name', 'is_active', 'password', 'email', 'phone'];
     protected $hidden = ['password'];
 
     public function shipping()
