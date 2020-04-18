@@ -159,6 +159,6 @@ class OrdersController extends WebController
         if (!$promotion) {
             return $this->responseError(['Mã code không hợp lệ']);
         }
-        return $this->responseViewSuccess(['discount' => $promotion]);
+        return $this->responseViewSuccess(['discount' => $promotion], ['Mã code đã được áp dụng.']);
     }
 }

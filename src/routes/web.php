@@ -30,6 +30,9 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('customers/register', 'CustomersController@store');
         Route::get('logout', 'CustomersController@logout');
         Route::post('shippings', 'ShippingsController@store');
+        Route::delete('shippings/{id}', 'ShippingsController@destroy');
+        Route::post('payments', 'PaymentsController@store');
+        Route::get('payments/{service}/callback', 'PaymentsController@callback');
     });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

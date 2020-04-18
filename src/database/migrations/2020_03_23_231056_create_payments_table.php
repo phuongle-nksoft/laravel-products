@@ -13,17 +13,26 @@ class CreatePaymentsTable extends Migration
      */
     public function up()
     {
+        Schema::dropIfExists('payments');
         Schema::create('payments', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('products_id')->index('payments_products_id_index');
             $table->unsignedBigInteger('orders_id')->index('payments_orders_id_index');
-            $table->integer('status');
-            $table->unsignedBigInteger('payment_methods_id')->index('payments_payment_methods_id_index');
+            $table->decimal('Amount', 12, 2)->nullable();
+            $table->string('BankCode')->nullable();
+            $table->string('BankTranNo')->nullable();
+            $table->string('CardType')->nullable();
+            $table->text('OrderInfo')->nullable();
+            $table->string('PayDate')->nullable();
+            $table->integer('ResponseCode')->nullable();
+            $table->string('TmnCode')->nullable();
+            $table->string('TransactionNo')->nullable();
+            $table->string('TxnRef')->nullable();
+            $table->string('SecureHashType')->nullable();
+            $table->text('SecureHash')->nullable();
+            $table->integer('status')->nullable();
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('orders_id', 'payments_orders_id_foreign')->references('id')->on('orders')->onDelete('cascade');
-            $table->foreign('products_id', 'payments_products_id_foreign')->references('id')->on('products')->onDelete('cascade');
-            $table->foreign('payment_methods_id', 'payments_payment_methods_id_foreign')->references('id')->on('payment_methods')->onDelete('cascade');
         });
     }
 
@@ -35,12 +44,8 @@ class CreatePaymentsTable extends Migration
     public function down()
     {
         Schema::table('payments', function (Blueprint $table) {
-            $table->dropForeign('payments_payment_methods_id_foreign');
-            $table->dropForeign('payments_products_id_foreign');
             $table->dropForeign('payments_orders_id_foreign');
-            $table->dropIndex('payments_payment_methods_id_index');
             $table->dropIndex('payments_orders_id_index');
-            $table->dropIndex('payments_products_id_index');
         });
         Schema::dropIfExists('payments');
     }

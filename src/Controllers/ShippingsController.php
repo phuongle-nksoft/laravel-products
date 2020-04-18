@@ -9,7 +9,7 @@ use Nksoft\Products\Models\Shipping as CurrentModel;
 
 class ShippingsController extends WebController
 {
-    private $formData = ['id', 'customers_id', 'address', 'phone', 'name', 'company', 'is_default', 'note'];
+    private $formData = ['id', 'customers_id', 'address', 'phone', 'name', 'company', 'is_default', 'last_shipping', 'note'];
 
     protected $module = 'shippings';
 
@@ -73,13 +73,14 @@ class ShippingsController extends WebController
                 }
             }
             if ($data['is_default']) {
-                CurrentModel::where(['customers_id' => $data['customers_id']])->update(['is_default' => 0]);
+                CurrentModel::where(['customers_id' => $data['customers_id']])->update(['is_default' => 0, 'last_shipping' => 0]);
             }
             $shipping = CurrentModel::create($data);
             $customer = Customers::where(['id' => $data['customers_id']])->with('shipping')->first();
             session()->put('user', $customer);
             $response = [
                 'user' => $customer,
+                'shipping' => $shipping,
             ];
             return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
         } catch (\Exception $e) {
@@ -129,6 +130,18 @@ class ShippingsController extends WebController
      */
     public function destroy($id)
     {
-        //
+        try {
+            $shipping = CurrentModel::find($id);
+            $customerId = $shipping->customer->id;
+            $shipping->forceDelete();
+            $customer = Customers::where(['id' => $customerId])->with('shipping')->first();
+            session()->put('user', $customer);
+            $response = [
+                'user' => $customer,
+            ];
+            return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
     }
 }
