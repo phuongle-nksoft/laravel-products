@@ -8,11 +8,13 @@ use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
+use Nksoft\Products\Models\ProductComments;
 use Nksoft\Products\Models\Products as CurrentModel;
 use Nksoft\Products\Models\ProfessionalRatings;
 use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Vintages;
+use Nksoft\Products\Models\Wishlists;
 
 class ProductsController extends WebController
 {
@@ -263,11 +265,16 @@ class ProductsController extends WebController
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
                 ->with($with)->paginate();
+            $productInCategory = CategoryProductsIndex::whereIn('categories_id', function ($query) use ($id) {
+                return $query->select('categories_id')->from(with(new CategoryProductsIndex)->getTable())->where(['products_id' => $id])->pluck('categories_id')->toArray();
+            })->select(['products_id'])->groupBy('products_id')->with(['products'])->get();
+
             $response = [
                 'result' => $result,
                 'brands' => $brands,
                 'vintages' => $vintages,
                 'regions' => $regions,
+                'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
                 'breadcrumb' => [
                     ['link' => url('/'), 'label' => \trans('nksoft::common.Home')],
@@ -377,6 +384,78 @@ class ProductsController extends WebController
             $rating->description = $data->description;
             $rating->ratings = $data->ratings;
             $rating->save();
+        }
+    }
+
+    public function addWishlist(Request $request)
+    {
+        try {
+            $user = session('user');
+            $validator = Validator($request->all(), ['products_id' => 'required'], ['products_id' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Product Id')])]);
+            if ($validator->fails() || !$user) {
+                return $this->responseError($validator->errors());
+            }
+            $productId = $request->get('products_id');
+            $wishlist = Wishlists::updateOrCreate(['customers_id' => $user->id, 'products_id' => $productId], ['customers_id' => $user->id, 'products_id' => $productId]);
+            return $this->responseViewSuccess(['wishlist' => $wishlist], ['Sản phẩm đã được thêm vào danh sách rượu của bạn']);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+
+    }
+
+    public function getComment($productId)
+    {
+        try {
+            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0])->with(['children'])->orderBy('id', 'desc')->paginate();
+            return $this->responseViewSuccess(['comment' => $comment]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function addComment(Request $request)
+    {
+        try {
+            $user = session('user');
+            $rules = [
+                'products_id' => 'required',
+                'description' => 'required',
+            ];
+            $messages = [
+                'products_id' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Product Id')]),
+                'description' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Content')]),
+            ];
+            $validator = Validator($request->all(), $rules, $messages);
+            if ($validator->fails() || !$user) {
+                return $this->responseError($validator->errors());
+            }
+            $productId = $request->get('products_id');
+            $data = [
+                'customers_id' => $user->id,
+                'products_id' => $productId,
+                'description' => $request->get('description'),
+                'status' => 0,
+                'parent_id' => $request->get('parent_id'),
+                'name' => $user->name,
+            ];
+            ProductComments::create($data);
+            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0])->with(['children'])->orderBy('id', 'desc')->paginate();
+            return $this->responseViewSuccess(['comment' => $comment], ['Câu hỏi của bạn đã được gửi cho chúng tôi']);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function deleteWishlist($wishlistId)
+    {
+        try {
+            $user = session('user');
+            $wishlist = Wishlists::where(['customers_id' => $user->id])->where('id', '<>', $wishlistId)->get();
+            Wishlists::where('id', $wishlistId)->forceDelete();
+            return $this->responseViewSuccess(['wishlist' => $wishlist]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
         }
     }
 

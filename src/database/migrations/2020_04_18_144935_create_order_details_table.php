@@ -39,7 +39,6 @@ class CreateOrderDetailsTable extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign('order_details_orders_id_foreign');
             $table->dropForeign('order_details_products_id_foreign');
-            $table->dropForeign('orders_shippings_id_foreign');
             $table->dropIndex('order_details_orders_id_index');
             $table->dropIndex('order_details_products_id_index');
         });

@@ -29,10 +29,18 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('customers/login', 'CustomersController@login');
         Route::post('customers/register', 'CustomersController@store');
         Route::get('logout', 'CustomersController@logout');
+        Route::get('myWine/{customerId}', 'CustomersController@myWine');
         Route::post('shippings', 'ShippingsController@store');
         Route::delete('shippings/{id}', 'ShippingsController@destroy');
         Route::post('payments', 'PaymentsController@store');
         Route::get('payments/{service}/callback', 'PaymentsController@callback');
+        Route::post('addWishlist', 'ProductsController@addWishlist');
+        Route::delete('deleteWishlist/{wishlistId}', 'ProductsController@deleteWishlist');
+        Route::post('addComment', 'ProductsController@addComment');
+        Route::get('getComment/{productId}', 'ProductsController@getComment');
+        Route::resources([
+            'customers' => CustomersController::class,
+        ]);
     });
 });
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

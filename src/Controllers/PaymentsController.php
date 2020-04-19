@@ -210,8 +210,10 @@ class PaymentsController extends WebController
         );
         if ($responseCode == '00') {
             CurrentModel::create($data);
-            $order = Orders::where(['id' => $orderId])->update(['status' => 2]);
-            $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders'])->first();
+            $order = Orders::find($orderId);
+            $order->status = 2;
+            $order->save();
+            $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders', 'wishlists'])->first();
             session()->put('user', $customer);
             session()->forget(config('nksoft.addCart'));
             return redirect('success');

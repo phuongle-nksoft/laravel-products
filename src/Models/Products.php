@@ -11,26 +11,31 @@ class Products extends NksoftModel
 
     public function categoryProductIndies()
     {
-        return $this->hasMany('\Nksoft\Products\Models\CategoryProductsIndex', 'products_id')->with(['categories']);
+        return $this->hasMany(CategoryProductsIndex::class, 'products_id')->with(['categories']);
     }
 
     public function vintages()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Vintages')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id']);
+        return $this->belongsTo('\Nksoft\Products\Models\Vintages')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id'])->orderBy('order_by', 'asc')->orderBy('created_at', 'desc');
     }
 
     public function brands()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Brands')->with(['images'])->select(['id', 'name', 'is_active', 'order_by', 'slug', 'video_id', 'description']);
+        return $this->belongsTo('\Nksoft\Products\Models\Brands')->with(['images'])->select(['id', 'name', 'is_active', 'order_by', 'slug', 'video_id', 'description'])->orderBy('order_by', 'asc')->orderBy('created_at', 'desc');
     }
 
     public function regions()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Regions')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id']);
+        return $this->belongsTo('\Nksoft\Products\Models\Regions')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id'])->orderBy('order_by', 'asc')->orderBy('created_at', 'desc');
     }
 
     public function professionalsRating()
     {
-        return $this->hasMany('\Nksoft\Products\Models\ProfessionalRatings', 'products_id')->with(['professional'])->select(['id', 'professionals_id', 'products_id', 'description', 'ratings']);
+        return $this->hasMany('\Nksoft\Products\Models\ProfessionalRatings', 'products_id')->with(['professional'])->select(['id', 'professionals_id', 'products_id', 'description', 'ratings'])->orderBy('created_at', 'desc');
+    }
+
+    public function orderDetails()
+    {
+        return $this->belongsTo('\Nksoft\Products\Models\OrderDetails', 'products_id')->orderBy('created_at', 'desc');
     }
 }

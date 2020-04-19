@@ -11,7 +11,7 @@ use \Arr;
 
 class CustomersController extends WebController
 {
-    private $formData = ['id', 'is_active', 'name', 'email', 'password'];
+    private $formData = ['id', 'is_active', 'name', 'email', 'password', 'phone'];
 
     protected $module = 'customers';
 
@@ -201,6 +201,7 @@ class CustomersController extends WebController
             return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
         }
         try {
+            $isApi = $request->get('isApi');
             $data = [];
             foreach ($this->formData as $item) {
                 if ($item != 'images' && $item != 'id') {
@@ -212,6 +213,7 @@ class CustomersController extends WebController
             } else {
                 unset($data['password']);
             }
+            unset($data['isApi']);
 
             foreach ($data as $k => $v) {
                 $user->$k = $v;
@@ -224,9 +226,13 @@ class CustomersController extends WebController
             $response = [
                 'result' => $user,
             ];
-            return $this->responseSuccess($response);
+            if ($isApi) {
+                session()->put('user', $user);
+            }
+
+            return $isApi ? $this->responseViewSuccess(['user' => $user]) : $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError([$e->getMessage()]);
         }
     }
 
@@ -238,7 +244,7 @@ class CustomersController extends WebController
         }
 
         $credentials = $request->only('email', 'password');
-        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'phone'])->where(['email' => $credentials['email']])->with(['shipping', 'orders'])->first();
+        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'phone'])->where(['email' => $credentials['email']])->with(['shipping', 'orders', 'wishlists'])->first();
         if (!$customer) {
             return $this->responseError([trans('nksoft::message.Account is incorrect!')]);
         }
@@ -262,9 +268,9 @@ class CustomersController extends WebController
     public function callback($service)
     {
         $user = Socialite::driver($service)->user();
-        $email = $user->getEmail();
-        $name = $user->getName();
-        $customer = CurrentModel::where(['email' => $user->getEmail()])->with(['shipping'])->first();
+        $email = $user->email;
+        $name = $user->name;
+        $customer = CurrentModel::where(['email' => $user->getEmail()])->with(['shipping', 'wishlists', 'orders'])->first();
         if (!$customer) {
             $customer = CurrentModel::create([
                 'name' => $name,
@@ -274,6 +280,20 @@ class CustomersController extends WebController
             ]);
         }
         session()->put('user', $customer);
-        return $this->responseViewSuccess(['user' => $customer]);
+        return redirect()->to('/');
+    }
+
+    public function myWine($customerId)
+    {
+        try {
+            $customer = CurrentModel::find($customerId);
+            if (!$customer) {
+                return $this->responseError('404');
+            }
+
+            return $this->responseViewSuccess(['wishlist' => $customer->wishlists]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
     }
 }

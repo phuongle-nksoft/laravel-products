@@ -120,7 +120,7 @@ class OrdersController extends WebController
             $allCarts = [];
             array_push($allCarts, $itemCart);
         } else {
-            $existsItem = collect($allCarts)->firstWhere('product_id', $product->id)->toArray();
+            $existsItem = collect($allCarts)->firstWhere('product_id', $product->id);
             if (!$existsItem) {
                 array_push($allCarts, $itemCart);
             } else {
