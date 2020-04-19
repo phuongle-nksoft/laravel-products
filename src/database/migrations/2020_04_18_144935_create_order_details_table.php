@@ -19,10 +19,9 @@ class CreateOrderDetailsTable extends Migration
             $table->unsignedBigInteger('products_id')->index('order_details_products_id_index');
             $table->integer('qty');
             $table->decimal('price', 12, 2)->nullable()->default(0);
-            $table->decimal('toltal', 12, 2)->nullable()->default(0);
-            $table->bigInteger('promotion_id')->nullable();
-            $table->string('discount_code')->nullable();
-            $table->decimal('discount_amount', 12, 2)->nullable();
+            $table->decimal('special_price', 12, 2)->nullable()->default(0);
+            $table->decimal('subtotal', 12, 2)->nullable()->default(0);
+            $table->string('name')->nullable();
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('orders_id', 'order_details_orders_id_foreign')->references('id')->on('orders')->onDelete('cascade');

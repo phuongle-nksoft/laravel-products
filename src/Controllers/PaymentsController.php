@@ -4,6 +4,9 @@ namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\Customers;
+use Nksoft\Products\Models\OrderDetails;
+use Nksoft\Products\Models\Orders;
 use Nksoft\Products\Models\Payments as CurrentModel;
 use Nksoft\Products\Models\Products;
 
@@ -29,26 +32,19 @@ class PaymentsController extends WebController
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function vnpayUrl($order, $request)
     {
-        dd($request->all());
-        $vnp_Url = "http://sandbox.vnpayment.vn/paymentv2/vpcpay.htm";
-        $vnp_Returnurl = env('APP_URL')+"payments/vnpay/callback";
+        $vnp_Url = "http://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+        $vnp_Returnurl = env('APP_URL') . "payments/vnpay/callback";
         $vnp_TmnCode = env('VNP_TMNCODE'); //Mã website tại VNPAY
         $vnp_HashSecret = env('VNP_HASHSECRET'); //Chuỗi bí mật
 
-        $vnp_TxnRef = $_POST['order_id']; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
-        $vnp_OrderInfo = $_POST['order_desc'];
-        $vnp_OrderType = $_POST['order_type'];
-        $vnp_Amount = $_POST['amount'] * 100;
-        $vnp_Locale = $_POST['language'];
-        $vnp_BankCode = $_POST['bank_code'];
+        $vnp_TxnRef = $order->id;
+        $vnp_OrderInfo = 'Thanh toan website';
+        $vnp_OrderType = 'billpayment';
+        $vnp_Amount = $order->total * 100;
+        $vnp_Locale = config('app.locale');
+        $vnp_BankCode = $request->get('bankActive');
         $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
 
         $inputData = array(
@@ -85,14 +81,67 @@ class PaymentsController extends WebController
 
         $vnp_Url = $vnp_Url . "?" . $query;
         if (isset($vnp_HashSecret)) {
-            // $vnpSecureHash = md5($vnp_HashSecret . $hashdata);
             $vnpSecureHash = hash('sha256', $vnp_HashSecret . $hashdata);
             $vnp_Url .= 'vnp_SecureHashType=SHA256&vnp_SecureHash=' . $vnpSecureHash;
         }
-        $returnData = array('code' => '00'
-            , 'message' => 'success'
-            , 'data' => $vnp_Url);
-        return $this->responseViewSuccess(['result' => $returnData]);
+        return $vnp_Url;
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $validator = validator()->make($request->all(), ['shippings_id' => 'required'], ['shippings_id' => 'Bạn chưa chọn địa chỉ giao hàng']);
+        if ($validator->fails()) {
+            return $this->responseError($validator->errors());
+        }
+        $cart = session(config('nksoft.addCart'));
+        if (!$cart) {
+            return $this->responseError(['Không tìm thấy sản phẩm']);
+        }
+        $user = session('user');
+        if (!$user) {
+            return $this->responseError(['Vui lòng đăng nhập']);
+        }
+        $promotion = $request->get('discount');
+        $total = collect($cart)->sum('subtotal');
+        if ($promotion) {
+            $discountAmount = $promotion['simple_action'] == 1 ? $promotion['discount_amount'] / 100 * $total : $promotion['discount_amount'];
+            $total = $total - $discountAmount;
+        }
+        $orderData = [
+            'shippings_id' => $request->get('shippings_id'),
+            'customers_id' => $user->id,
+            'status' => 1,
+            'discount_code' => $promotion['code'] ?? '',
+            'promotion_id' => $promotion['id'] ?? 0,
+            'discount_amount' => $promotion['discount_amount'] ?? 0.00,
+            'total' => collect($cart)->sum('subtotal'),
+        ];
+        $order = Orders::create($orderData);
+        if ($order) {
+            $dataDetails = [];
+            foreach ($cart as $item) {
+                $dataDetails[] = [
+                    'orders_id' => $order->id,
+                    'products_id' => $item['product_id'],
+                    'qty' => $item['qty'],
+                    'subtotal' => $item['subtotal'],
+                    'name' => $item['name'],
+                    'price' => $item['price'],
+                    'special_price' => $item['special_price'],
+
+                ];
+            }
+            OrderDetails::insert($dataDetails);
+            $vnp_Url = $this->vnpayUrl($order, $request);
+            return $this->responseViewSuccess(['url' => $vnp_Url]);
+        }
+        return $this->responseError(['Đơn hàng chưa được tạo']);
     }
 
     /**
@@ -142,6 +191,7 @@ class PaymentsController extends WebController
 
     public function callback(Request $request, $service)
     {
+        $orderId = $request->get('vnp_TxnRef');
         $responseCode = $request->get('vnp_ResponseCode');
         $data = array(
             'Amount' => $request->get('vnp_Amount'),
@@ -154,16 +204,20 @@ class PaymentsController extends WebController
             'TmnCode' => $request->get('vnp_TmnCode'),
             'TransactionNo' => $request->get('vnp_TransactionNo'),
             'TxnRef' => $request->get('vnp_TxnRef'),
-            'orders_id' => $request->get('vnp_TxnRef'),
+            'orders_id' => $orderId,
             'SecureHashType' => $request->get('vnp_SecureHashType'),
             'SecureHash' => $request->get('vnp_SecureHash'),
         );
         if ($responseCode == '00') {
             CurrentModel::create($data);
-            session()->forget('cart');
-            return $this->responseViewSuccess(null, ['Đơn hàng đã được thanh toán.']);
+            $order = Orders::where(['id' => $orderId])->update(['status' => 2]);
+            $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders'])->first();
+            session()->put('user', $customer);
+            session()->forget(config('nksoft.addCart'));
+            return redirect('success');
         } else {
-            return $this->responseError(['Thanh toán không thành công']);
+            Orders::where(['id' => $orderId])->forceDelete();
+            return redirect('fails');
         }
     }
 }

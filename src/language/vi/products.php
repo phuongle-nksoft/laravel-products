@@ -10,5 +10,10 @@ return [
     'Discount Qty' => 'Số Lượng',
     'Product Ids' => 'Sản Phẩm',
     'Percent Of Product price discount' => 'Giảm Giá Theo %',
-    'Fixed Amount Discount' => 'Giảm Giá Theo Giá Trị'
+    'Fixed Amount Discount' => 'Giảm Giá Theo Giá Trị',
+    'Pendding' => 'Chưa Thanh Toán',
+    'Success' => 'Đã Thanh Toán',
+    'Shipping' => 'Đang Gửi Hàng',
+    'Done' => 'Hoàn Tất',
+    'Cancel' => 'Hủy Đơn Hàng',
 ];

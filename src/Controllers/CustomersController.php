@@ -217,7 +217,6 @@ class CustomersController extends WebController
                 $user->$k = $v;
             }
             $user->save();
-            // $user = CurrentModel::save(['id' => $id], $data);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $user->id, $this->module);
@@ -239,7 +238,7 @@ class CustomersController extends WebController
         }
 
         $credentials = $request->only('email', 'password');
-        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'phone'])->where(['email' => $credentials['email']])->with('shipping')->first();
+        $customer = CurrentModel::select(['id', 'name', 'email', 'password', 'phone'])->where(['email' => $credentials['email']])->with(['shipping', 'orders'])->first();
         if (!$customer) {
             return $this->responseError([trans('nksoft::message.Account is incorrect!')]);
         }

@@ -120,7 +120,7 @@ class OrdersController extends WebController
             $allCarts = [];
             array_push($allCarts, $itemCart);
         } else {
-            $existsItem = collect($allCarts)->firstWhere('product_id', $product->id);
+            $existsItem = collect($allCarts)->firstWhere('product_id', $product->id)->toArray();
             if (!$existsItem) {
                 array_push($allCarts, $itemCart);
             } else {
@@ -155,7 +155,7 @@ class OrdersController extends WebController
         $cart = session()->get(config('nksoft.addCart'));
         $code = $request->get('code');
         $today = Date('Y-m-d');
-        $promotion = Promotions::select(['code', 'simple_action', 'discount_amount'])->where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null)', $today)->where('start_date', '<=', $today)->first();
+        $promotion = Promotions::select(['id', 'code', 'simple_action', 'discount_amount'])->where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null)', $today)->where('start_date', '<=', $today)->first();
         if (!$promotion) {
             return $this->responseError(['Mã code không hợp lệ']);
         }

@@ -17,6 +17,10 @@ class CreateOrdersTable extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('customers_id')->index('orders_customers_id_index');
             $table->unsignedBigInteger('shippings_id')->index('orders_shippings_id_index');
+            $table->bigInteger('promotion_id')->nullable();
+            $table->string('discount_code')->nullable();
+            $table->decimal('discount_amount', 12, 2)->nullable();
+            $table->decimal('total', 12, 2)->nullable();
             $table->integer('status')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
