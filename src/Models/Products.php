@@ -14,6 +14,11 @@ class Products extends NksoftModel
         return $this->hasMany(CategoryProductsIndex::class, 'products_id')->with(['categories']);
     }
 
+    public function firstCategory()
+    {
+        return $this->hasOne(CategoryProductsIndex::class, 'categories_id')->with(['categories']);
+    }
+
     public function vintages()
     {
         return $this->belongsTo('\Nksoft\Products\Models\Vintages')->with(['parent', 'images'])->select(['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id'])->orderBy('order_by', 'asc')->orderBy('created_at', 'desc');

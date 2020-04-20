@@ -295,4 +295,18 @@ class CustomersController extends WebController
             return $this->responseError([$e->getMessage()]);
         }
     }
+
+    public function histories($customerId)
+    {
+        try {
+            $customer = CurrentModel::find($customerId);
+            if (!$customer) {
+                return $this->responseError('404');
+            }
+            $orders = $customer->orders()->with(['orderDetails'])->orderBy('created_at', 'desc')->paginate();
+            return $this->responseViewSuccess(['orders' => $orders, 'status' => config('nksoft.orderStatus')]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
 }

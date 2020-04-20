@@ -341,7 +341,6 @@ class ProductsController extends WebController
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
-
             $result->save();
             $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
@@ -361,9 +360,10 @@ class ProductsController extends WebController
 
     public function setProfessionalRating($request, $result)
     {
+        $productsId = $result->id;
         $professionalRating = \json_decode($request->get('professionals_rating'));
         $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
-        $dataProducts = ProfessionalRatings::where(['products_id' => $result->id]);
+        $dataProducts = ProfessionalRatings::where(['products_id' => $productsId]);
         /** Delete record by category id not in list */
         foreach ($dataProducts->get() as $data) {
             if (!in_array($data->professionals_id, $professionalIds)) {
@@ -374,16 +374,14 @@ class ProductsController extends WebController
         /** Save new record */
         $existsItem = $dataProducts->pluck('professionals_id')->toArray();
         foreach ($professionalRating as $data) {
-            if (count($existsItem) == 0 || !in_array($data->professionals_id, $existsItem)) {
-                $rating = new ProfessionalRatings();
-            } else {
-                $rating = $dataProducts->where(['professionals_id' => $data->professionals_id])->first();
-            }
-            $rating->products_id = $result->id;
-            $rating->professionals_id = $data->professionals_id;
-            $rating->description = $data->description;
-            $rating->ratings = $data->ratings;
-            $rating->save();
+            $dataRatings = [
+                'products_id' => $productsId,
+                'professionals_id' => $data->professionals_id,
+                'description' => $data->description,
+                'ratings' => $data->ratings
+            ];
+            ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id], $dataRatings);
+
         }
     }
 

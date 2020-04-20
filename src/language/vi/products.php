@@ -14,6 +14,6 @@ return [
     'Pendding' => 'Chưa Thanh Toán',
     'Success' => 'Đã Thanh Toán',
     'Shipping' => 'Đang Gửi Hàng',
-    'Done' => 'Hoàn Tất',
+    'Done' => 'Đã giao hàng',
     'Cancel' => 'Hủy Đơn Hàng',
 ];

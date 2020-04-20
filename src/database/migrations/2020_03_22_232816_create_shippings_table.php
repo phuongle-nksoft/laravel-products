@@ -19,9 +19,9 @@ class CreateShippingsTable extends Migration
             $table->string('address')->nullable();
             $table->string('phone');
             $table->string('name');
-            $table->string('company')->nullabel();
-            $table->boolean('is_default')->default(0)->nullabel();
-            $table->boolean('last_shipping')->default(0)->nullabel();
+            $table->string('company')->nullable();
+            $table->boolean('is_default')->default(0)->nullable();
+            $table->boolean('last_shipping')->default(0)->nullable();
             $table->text('note')->nullable();
             $table->softDeletes();
             $table->timestamps();

@@ -18,7 +18,7 @@ class Customers extends NksoftModel
 
     public function orders()
     {
-        return $this->hasMany(Orders::class, 'customers_id')->with(['orderDetails'])->select(['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'status']);
+        return $this->hasMany(Orders::class, 'customers_id')->with(['orderDetails'])->select(['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'status', 'created_at']);
     }
 
     public function wishlists()

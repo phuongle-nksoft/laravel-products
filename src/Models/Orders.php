@@ -15,6 +15,6 @@ class Orders extends NksoftModel
 
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetails::class, 'orders_id')->select(['id', 'orders_id', 'products_id', 'qty', 'price', 'special_price', 'subtotal', 'name', 'created_at']);
+        return $this->hasMany(OrderDetails::class, 'orders_id')->select(['id', 'orders_id', 'products_id', 'qty', 'price', 'special_price', 'subtotal', 'name', 'created_at'])->with(['products']);
     }
 }
