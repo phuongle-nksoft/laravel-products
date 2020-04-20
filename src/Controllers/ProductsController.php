@@ -10,9 +10,11 @@ use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\ProductComments;
 use Nksoft\Products\Models\Products as CurrentModel;
+use Nksoft\Products\Models\ProductTags;
 use Nksoft\Products\Models\ProfessionalRatings;
 use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
+use Nksoft\Products\Models\Tags;
 use Nksoft\Products\Models\Vintages;
 use Nksoft\Products\Models\Wishlists;
 
@@ -100,7 +102,26 @@ class ProductsController extends WebController
                 'type' => 'textarea',
                 'key' => 'description',
             ],
+            [
+                'label' => trans('nksoft::common.Content'),
+                'type' => 'checkbox',
+                'key' => 'show',
+            ],
         ];
+        $volume = [
+            ['id' => 750, 'name' => '750ML'],
+            ['id' => 1000, 'name' => '1L'],
+            ['id' => 1500, 'name' => '1.5L'],
+            ['id' => 3000, 'name' => '3L'],
+            ['id' => 6000, 'name' => '6L'],
+        ];
+        $date = [];
+        for ($i = 0; $i < 200; $i++) {
+            $v = date('YYYY') - $i;
+            $date[] = ['id' => $v, 'name' => $v];
+        }
+        $tags = Tags::select(['id', 'name'])->get();
+        dd($tags);
         return [
             [
                 'key' => 'general',
@@ -111,7 +132,7 @@ class ProductsController extends WebController
                     ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'tree'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), $tags => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
             ],
@@ -120,17 +141,18 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'sku', 'label' => trans('nksoft::common.Sku'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'sku', 'label' => trans('nksoft::common.Sku'), 'data' => null, 'type' => 'text'],
+                    ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
-                    ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'class' => 'required', 'type' => 'number'],
-                    ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => null, 'class' => 'required', 'type' => 'number'],
+                    ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
                     ['key' => 'smell', 'label' => trans('nksoft::common.Smell'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
-                    ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'text'],
+                    ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $date, 'class' => 'col-12 col-lg-4', 'type' => 'select'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
+                    ['key' => 'tags', 'label' => trans('nksoft::common.Tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
@@ -152,10 +174,6 @@ class ProductsController extends WebController
             'vintages_id' => 'required',
             'regions_id' => 'required',
             'brands_id' => 'required',
-            'sku' => 'required',
-            'price' => 'required',
-            'alcohol_content' => 'required',
-            'volume' => 'required',
             'images[]' => 'file',
         ];
 
@@ -210,6 +228,29 @@ class ProductsController extends WebController
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());
+        }
+    }
+
+    private function setTags($request, $result)
+    {
+        $categoryIds = \json_decode($request->get('tags'));
+        $categoryProducts = ProductTags::where(['products_id' => $result->id]);
+        /** Delete record by category id not in list */
+        foreach ($categoryProducts->get() as $categoryProduct) {
+            if (!in_array($categoryProduct->categories_id, $categoryIds)) {
+                $categoryProduct->forceDelete();
+            }
+
+        }
+        /** Save new record */
+        $existsItem = $categoryProducts->pluck('tags_id')->toArray();
+        foreach ($categoryIds as $id) {
+            if (count($existsItem) == 0 || !in_array($id, $existsItem)) {
+                $categoryProductIndex = new ProductTags();
+                $categoryProductIndex->products_id = $result->id;
+                $categoryProductIndex->tags_id = $id;
+                $categoryProductIndex->save();
+            }
         }
     }
 
@@ -268,7 +309,7 @@ class ProductsController extends WebController
             $productInCategory = CategoryProductsIndex::whereIn('categories_id', function ($query) use ($id) {
                 return $query->select('categories_id')->from(with(new CategoryProductsIndex)->getTable())->where(['products_id' => $id])->pluck('categories_id')->toArray();
             })->select(['products_id'])->groupBy('products_id')->with(['products'])->get();
-
+            CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
             $response = [
                 'result' => $result,
                 'brands' => $brands,
@@ -378,7 +419,7 @@ class ProductsController extends WebController
                 'products_id' => $productsId,
                 'professionals_id' => $data->professionals_id,
                 'description' => $data->description,
-                'ratings' => $data->ratings
+                'ratings' => $data->ratings,
             ];
             ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id], $dataRatings);
 

@@ -16,4 +16,5 @@ return [
     'Shipping' => 'Đang Gửi Hàng',
     'Done' => 'Đã giao hàng',
     'Cancel' => 'Hủy Đơn Hàng',
+    'Tags' => 'Tags',
 ];

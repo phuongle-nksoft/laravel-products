@@ -15,7 +15,8 @@ Route::group(['prefix' => 'api/admin', 'middleware' => 'web', 'namespace' => 'Nk
         'vintages' => VintagesController::class,
         'ratings' => RatingsController::class,
         'regions' => RegionsController::class,
-        'promotions' => PromotionsController::class
+        'promotions' => PromotionsController::class,
+        'tags' => TagsController::class,
     ]);
 });
 Route::group(['prefix' => 'api', 'namespace' => 'Nksoft\Products\Controllers'], function () {

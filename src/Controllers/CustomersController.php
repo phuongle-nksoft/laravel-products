@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers as CurrentModel;
+use Nksoft\Products\Models\Products;
 use \Arr;
 
 class CustomersController extends WebController
@@ -289,8 +290,15 @@ class CustomersController extends WebController
             if (!$customer) {
                 return $this->responseError('404');
             }
+            $wishlistIds = $customer->wishlists()->pluck('products_id')->toArray();
+            $products = Products::whereIn('id', $wishlistIds);
+            $key = request()->get('key');
+            $sort = request()->get('sort');
+            if ($key && $sort) {
+                $products = $products->orderBy($key, $sort);
+            }
 
-            return $this->responseViewSuccess(['wishlist' => $customer->wishlists]);
+            return $this->responseViewSuccess(['wishlist' => $products->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'])->paginate()]);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }
