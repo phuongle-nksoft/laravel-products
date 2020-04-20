@@ -208,13 +208,12 @@ class CustomersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            if ($data['password'] != 'undefined') {
+            if ($data['password'] && $data['password'] != 'undefined') {
                 $data['password'] = \Hash::make($data['password']);
             } else {
                 unset($data['password']);
             }
             unset($data['isApi']);
-
             foreach ($data as $k => $v) {
                 $user->$k = $v;
             }
