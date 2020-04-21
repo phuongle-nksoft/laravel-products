@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\Vintages as CurrentModel;
+use Nksoft\Products\Models\VintagesProductIndex;
 
 class VintagesController extends WebController
 {
@@ -178,8 +179,11 @@ class VintagesController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['vintages_id' => $id, 'is_active' => 1])->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
-                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $products = VintagesProductIndex::select(['products_id'])->whereIn('vintages_id', $listIds)->groupBy('products_id')->with(['products']);
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),

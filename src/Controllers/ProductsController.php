@@ -4,6 +4,7 @@ namespace Nksoft\Products\Controllers;
 
 use Arr;
 use Illuminate\Http\Request;
+use Nksoft\Articles\Models\Blocks;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
@@ -108,7 +109,7 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.Content'),
                 'type' => 'checkbox',
                 'key' => 'show',
-                'class' => 'col-md-1'
+                'class' => 'col-md-1',
             ],
         ];
         $volume = [
@@ -124,7 +125,10 @@ class ProductsController extends WebController
             $date[] = ['id' => $v, 'name' => $v];
         }
         $tagIds = [];
-        if ($result) $tagIds = $result->productTags()->pluck('tags_id')->toArray();
+        if ($result) {
+            $tagIds = $result->productTags()->pluck('tags_id')->toArray();
+        }
+
         $tags = Tags::GetListByProduct($tagIds);
         return [
             [
@@ -249,7 +253,10 @@ class ProductsController extends WebController
         $productsId = $result->id;
         $professionalRating = \json_decode($request->get('professionals_rating'));
         $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
-        if (!$professionalIds) return;
+        if (!$professionalIds) {
+            return;
+        }
+
         /** Delete record by category id not in list */
         ProfessionalRatings::where(['products_id' => $productsId])->whereNotIn('professionals_id', $professionalIds)->forceDelete();
 
@@ -260,7 +267,7 @@ class ProductsController extends WebController
                 'professionals_id' => $data->professionals_id,
                 'description' => $data->description,
                 'ratings' => $data->ratings,
-                'show' => $data->show ?? 0
+                'show' => $data->show ?? 0,
             ];
             ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id, 'products_id' => $productsId], $dataRatings);
         }
@@ -268,7 +275,10 @@ class ProductsController extends WebController
     private function setTags($request, $result)
     {
         $tagIds = \json_decode($request->get('tags'));
-        if (!$tagIds) return;
+        if (!$tagIds) {
+            return;
+        }
+
         /** Delete record by category id not in list */
         ProductTags::where(['products_id' => $result->id])->whereNotIn('tags_id', $tagIds)->forceDelete();
         /** Save new record */
@@ -276,7 +286,7 @@ class ProductsController extends WebController
         foreach ($tagIds as $id) {
             $productTags = [
                 'products_id' => $result->id,
-                'tags_id' => $id
+                'tags_id' => $id,
             ];
             ProductTags::updateOrCreate(['products_id' => $result->id, 'tags_id' => $id], $productTags);
         }
@@ -285,8 +295,14 @@ class ProductsController extends WebController
     private function setCategoryProductsIndex(Request $request, $result)
     {
         $categoryIds = \json_decode($request->get('categories_id'));
-        if (!is_array($categoryIds)) $categoryIds = array($categoryIds);
-        if (!$categoryIds) return;
+        if (!is_array($categoryIds)) {
+            $categoryIds = array($categoryIds);
+        }
+
+        if (!$categoryIds) {
+            return;
+        }
+
         /** Delete record by category id not in list */
         CategoryProductsIndex::where(['products_id' => $result->id])->whereNotIn('categories_id', $categoryIds)->forceDelete();
 
@@ -294,7 +310,7 @@ class ProductsController extends WebController
         foreach ($categoryIds as $id) {
             $data = [
                 'products_id' => $result->id,
-                'categories_id' => $id
+                'categories_id' => $id,
             ];
             CategoryProductsIndex::updateOrCreate(['products_id' => $result->id, 'categories_id' => $id], $data);
         }
@@ -303,8 +319,14 @@ class ProductsController extends WebController
     private function setVintagesProductsIndex($request, $result)
     {
         $vintageIds = \json_decode($request->get('vintages_id'));
-        if (!is_array($vintageIds)) $vintageIds = array($vintageIds);
-        if (!$vintageIds) return;
+        if (!is_array($vintageIds)) {
+            $vintageIds = array($vintageIds);
+        }
+
+        if (!$vintageIds) {
+            return;
+        }
+
         /** Delete record by category id not in list */
         VintagesProductIndex::where(['products_id' => $result->id])->whereNotIn('vintages_id', $vintageIds)->forceDelete();
 
@@ -312,7 +334,7 @@ class ProductsController extends WebController
         foreach ($vintageIds as $id) {
             $data = [
                 'products_id' => $result->id,
-                'vintages_id' => $id
+                'vintages_id' => $id,
             ];
             VintagesProductIndex::updateOrCreate(['products_id' => $result->id, 'vintages_id' => $id], $data);
         }
@@ -327,7 +349,7 @@ class ProductsController extends WebController
     public function show($id)
     {
         try {
-            $select = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
+            $select = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
             $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)
@@ -339,7 +361,7 @@ class ProductsController extends WebController
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
                 ->with($with)->paginate();
-            $vintages = CurrentModel::where(['is_active' => 1, 'vintages_id' => $result->vintages_id])->where('id', '<>', $id)
+            $vintages = VintagesProductIndex::where(['vintages_id' => $result->vintages_id])->where('products_id', '<>', $id)
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
                 ->with($with)->paginate();
@@ -507,6 +529,26 @@ class ProductsController extends WebController
             $wishlist = Wishlists::where(['customers_id' => $user->id])->where('id', '<>', $wishlistId)->get();
             Wishlists::where('id', $wishlistId)->forceDelete();
             return $this->responseViewSuccess(['wishlist' => $wishlist]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function getHome()
+    {
+        try {
+            $ads = Blocks::whereIn('identify', ['campaign1', 'campaign2', 'campaign3', 'campaign4'])->where(['is_active' => 1])->get();
+            $tags = Tags::take(4)->getQuery();
+            $tagIds = $tags->pluck('id')->toArray();
+            $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {
+                $query->from(with(new ProductTags())->getTable())->select(['products_id'])->whereIn('tags_id', $tagIds)->pluck('products_id');
+            })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags'])->paginate();
+            $result = [
+                'ads' => $ads,
+                'result' => $products,
+                'tags' => $tags->get(),
+            ];
+            return $this->responseViewSuccess($result);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }

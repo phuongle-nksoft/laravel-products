@@ -40,6 +40,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::delete('deleteWishlist/{wishlistId}', 'ProductsController@deleteWishlist');
         Route::post('addComment', 'ProductsController@addComment');
         Route::get('getComment/{productId}', 'ProductsController@getComment');
+        Route::get('home', 'ProductsController@getHome');
         Route::resources([
             'customers' => CustomersController::class,
         ]);
