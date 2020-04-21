@@ -19,6 +19,7 @@ class CreateProfessionalRatingsTable extends Migration
             $table->unsignedBigInteger('products_id')->index('professional_ratings_products_id_index');
             $table->longText('description')->nullable();
             $table->double('ratings', 8, 2)->nullable()->default(0);
+            $table->boolean('show')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('professionals_id', 'professional_ratings_professionals_id_foreign')->references('id')->on('professionals')->onDelete('cascade');

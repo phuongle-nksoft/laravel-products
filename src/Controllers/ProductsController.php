@@ -16,13 +16,17 @@ use Nksoft\Products\Models\Professionals;
 use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Tags;
 use Nksoft\Products\Models\Vintages;
+use Nksoft\Products\Models\VintagesProductIndex;
 use Nksoft\Products\Models\Wishlists;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
 
     protected $module = 'products';
+
+    protected $excFields = ['images', 'categories_id', 'id', 'vintages_id'];
+    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id'];
 
     protected $model = CurrentModel::class;
     /**
@@ -62,9 +66,7 @@ class ProductsController extends WebController
     public function create()
     {
         try {
-            \array_push($this->formData, 'images');
-            \array_push($this->formData, 'categories_id');
-            \array_push($this->formData, 'professionals_rating');
+            $this->formData = \array_merge($this->formData, $this->mergFields);
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -80,7 +82,7 @@ class ProductsController extends WebController
     private function formElement($result = null)
     {
         $categories = Categories::GetListByProduct(array('parent_id' => 0), $result ? $result->categoryProductIndies->pluck('categories_id')->toArray() : [0]);
-        $vintages = Vintages::GetListByProduct(array('parent_id' => 0), $result);
+        $vintages = Vintages::GetListByProduct(array('parent_id' => 0), $result ? $result->vintages->pluck('vintages_id')->toArray() : [0]);
         $brands = Brands::select(['id', 'name'])->get();
         $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
         $professional = Professionals::select(['id', 'name'])->get();
@@ -106,6 +108,7 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.Content'),
                 'type' => 'checkbox',
                 'key' => 'show',
+                'class' => 'col-md-1'
             ],
         ];
         $volume = [
@@ -117,22 +120,23 @@ class ProductsController extends WebController
         ];
         $date = [];
         for ($i = 0; $i < 200; $i++) {
-            $v = date('YYYY') - $i;
+            $v = date('Y') - $i;
             $date[] = ['id' => $v, 'name' => $v];
         }
-        $tags = Tags::select(['id', 'name'])->get();
-        dd($tags);
+        $tagIds = [];
+        if ($result) $tagIds = $result->productTags()->pluck('tags_id')->toArray();
+        $tags = Tags::GetListByProduct($tagIds);
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
-                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'tree'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), $tags => null, 'type' => 'textarea'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
             ],
@@ -152,7 +156,6 @@ class ProductsController extends WebController
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
-                    ['key' => 'tags', 'label' => trans('nksoft::common.Tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
@@ -161,6 +164,14 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.Professional Rating'),
                 'element' => [
                     ['key' => 'professionals_rating', 'label' => trans('nksoft::common.Button.Add'), 'data' => $custom, 'type' => 'custom'],
+                ],
+            ],
+            [
+                'key' => 'childProducts',
+                'label' => trans('nksoft::common.Extra'),
+                'element' => [
+                    // ['key' => 'child_product', 'label' => trans('nksoft::common.Child Product'), 'data' => null, 'type' => 'tree', 'multiple' => true],
+                    ['key' => 'tags', 'label' => trans('nksoft::common.tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                 ],
             ],
         ];
@@ -209,7 +220,7 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if (!in_array($item, ['images', 'categories_id'])) {
+                if (!in_array($item, $this->excFields)) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -218,6 +229,8 @@ class ProductsController extends WebController
             $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
             $this->setProfessionalRating($request, $result);
+            $this->setVintagesProductsIndex($request, $result);
+            $this->setTags($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -231,49 +244,77 @@ class ProductsController extends WebController
         }
     }
 
+    public function setProfessionalRating($request, $result)
+    {
+        $productsId = $result->id;
+        $professionalRating = \json_decode($request->get('professionals_rating'));
+        $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
+        if (!$professionalIds) return;
+        /** Delete record by category id not in list */
+        ProfessionalRatings::where(['products_id' => $productsId])->whereNotIn('professionals_id', $professionalIds)->forceDelete();
+
+        /** Save new record */
+        foreach ($professionalRating as $data) {
+            $dataRatings = [
+                'products_id' => $productsId,
+                'professionals_id' => $data->professionals_id,
+                'description' => $data->description,
+                'ratings' => $data->ratings,
+                'show' => $data->show ?? 0
+            ];
+            ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id, 'products_id' => $productsId], $dataRatings);
+        }
+    }
     private function setTags($request, $result)
     {
-        $categoryIds = \json_decode($request->get('tags'));
-        $categoryProducts = ProductTags::where(['products_id' => $result->id]);
+        $tagIds = \json_decode($request->get('tags'));
+        if (!$tagIds) return;
         /** Delete record by category id not in list */
-        foreach ($categoryProducts->get() as $categoryProduct) {
-            if (!in_array($categoryProduct->categories_id, $categoryIds)) {
-                $categoryProduct->forceDelete();
-            }
-
-        }
+        ProductTags::where(['products_id' => $result->id])->whereNotIn('tags_id', $tagIds)->forceDelete();
         /** Save new record */
-        $existsItem = $categoryProducts->pluck('tags_id')->toArray();
-        foreach ($categoryIds as $id) {
-            if (count($existsItem) == 0 || !in_array($id, $existsItem)) {
-                $categoryProductIndex = new ProductTags();
-                $categoryProductIndex->products_id = $result->id;
-                $categoryProductIndex->tags_id = $id;
-                $categoryProductIndex->save();
-            }
+
+        foreach ($tagIds as $id) {
+            $productTags = [
+                'products_id' => $result->id,
+                'tags_id' => $id
+            ];
+            ProductTags::updateOrCreate(['products_id' => $result->id, 'tags_id' => $id], $productTags);
         }
     }
 
     private function setCategoryProductsIndex(Request $request, $result)
     {
         $categoryIds = \json_decode($request->get('categories_id'));
-        $categoryProducts = CategoryProductsIndex::where(['products_id' => $result->id]);
+        if (!is_array($categoryIds)) $categoryIds = array($categoryIds);
+        if (!$categoryIds) return;
         /** Delete record by category id not in list */
-        foreach ($categoryProducts->get() as $categoryProduct) {
-            if (!in_array($categoryProduct->categories_id, $categoryIds)) {
-                $categoryProduct->forceDelete();
-            }
+        CategoryProductsIndex::where(['products_id' => $result->id])->whereNotIn('categories_id', $categoryIds)->forceDelete();
 
-        }
         /** Save new record */
-        $existsItem = $categoryProducts->pluck('categories_id')->toArray();
         foreach ($categoryIds as $id) {
-            if (count($existsItem) == 0 || !in_array($id, $existsItem)) {
-                $categoryProductIndex = new CategoryProductsIndex();
-                $categoryProductIndex->products_id = $result->id;
-                $categoryProductIndex->categories_id = $id;
-                $categoryProductIndex->save();
-            }
+            $data = [
+                'products_id' => $result->id,
+                'categories_id' => $id
+            ];
+            CategoryProductsIndex::updateOrCreate(['products_id' => $result->id, 'categories_id' => $id], $data);
+        }
+    }
+
+    private function setVintagesProductsIndex($request, $result)
+    {
+        $vintageIds = \json_decode($request->get('vintages_id'));
+        if (!is_array($vintageIds)) $vintageIds = array($vintageIds);
+        if (!$vintageIds) return;
+        /** Delete record by category id not in list */
+        VintagesProductIndex::where(['products_id' => $result->id])->whereNotIn('vintages_id', $vintageIds)->forceDelete();
+
+        /** Save new record */
+        foreach ($vintageIds as $id) {
+            $data = [
+                'products_id' => $result->id,
+                'vintages_id' => $id
+            ];
+            VintagesProductIndex::updateOrCreate(['products_id' => $result->id, 'vintages_id' => $id], $data);
         }
     }
 
@@ -318,7 +359,7 @@ class ProductsController extends WebController
                 'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
                 'breadcrumb' => [
-                    ['link' => url('/'), 'label' => \trans('nksoft::common.Home')],
+                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];
@@ -337,11 +378,10 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating'])->find($id);
-            \array_push($this->formData, 'images');
-            \array_push($this->formData, 'categories_id');
-            \array_push($this->formData, 'professionals_rating');
+            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating', 'vintages'])->find($id);
+            $this->formData = \array_merge($this->formData, $this->mergFields);
             $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
+            $result->vintages_id = $result->vintages->pluck('vintages_id')->toArray();
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -374,7 +414,7 @@ class ProductsController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if (!in_array($item, ['images', 'categories_id', 'id'])) {
+                if (!in_array($item, $this->excFields)) {
                     $data[$item] = $request->get($item);
                 }
             }
@@ -386,6 +426,8 @@ class ProductsController extends WebController
             $this->setUrlRedirects($result);
             $this->setCategoryProductsIndex($request, $result);
             $this->setProfessionalRating($request, $result);
+            $this->setTags($request, $result);
+            $this->setVintagesProductsIndex($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -396,33 +438,6 @@ class ProductsController extends WebController
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());
-        }
-    }
-
-    public function setProfessionalRating($request, $result)
-    {
-        $productsId = $result->id;
-        $professionalRating = \json_decode($request->get('professionals_rating'));
-        $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
-        $dataProducts = ProfessionalRatings::where(['products_id' => $productsId]);
-        /** Delete record by category id not in list */
-        foreach ($dataProducts->get() as $data) {
-            if (!in_array($data->professionals_id, $professionalIds)) {
-                $data->forceDelete();
-            }
-
-        }
-        /** Save new record */
-        $existsItem = $dataProducts->pluck('professionals_id')->toArray();
-        foreach ($professionalRating as $data) {
-            $dataRatings = [
-                'products_id' => $productsId,
-                'professionals_id' => $data->professionals_id,
-                'description' => $data->description,
-                'ratings' => $data->ratings,
-            ];
-            ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id], $dataRatings);
-
         }
     }
 
@@ -440,7 +455,6 @@ class ProductsController extends WebController
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }
-
     }
 
     public function getComment($productId)
@@ -502,5 +516,4 @@ class ProductsController extends WebController
     {
         dd('list');
     }
-
 }

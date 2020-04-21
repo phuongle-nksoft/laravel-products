@@ -4,10 +4,14 @@ namespace Nksoft\Products\Models;
 
 use Nksoft\Master\Models\NksoftModel;
 
-class ProductTags extends NksoftModel
+class VintagesProductIndex extends NksoftModel
 {
-    protected $table = 'product_tags';
-    protected $fillable = ['id', 'tags_id', 'products_id', 'is_active'];
+    protected $table = 'vintages_product_indices';
+    protected $fillable = ['id', 'vintages_id', 'products_id', 'is_active'];
+    public function vintages()
+    {
+        return $this->belongsTo(Vintages::class, 'vintages_id')->with(['images']);
+    }
 
     public function products()
     {

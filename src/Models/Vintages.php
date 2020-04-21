@@ -52,23 +52,22 @@ class Vintages extends NksoftModel
     /**
      * Get list category to product
      */
-    public static function GetListByProduct($where, $product)
+    public static function GetListByProduct($where, $idSelected)
     {
-        $parentId = $product->vintages_id ?? 0;
         $data = array();
         $fs = self::where($where)->orderBy('order_by')->get();
         if ($fs) {
             foreach ($fs as $item) {
                 $selected = array(
                     'opened' => false,
-                    'selected' => $item->id === $parentId ? true : false,
+                    'selected' => in_array($item->id, $idSelected) ? true : false,
                 );
                 $data[] = array(
                     'text' => $item->name,
                     'icon' => 'fas fa-folder',
                     'id' => $item->id,
                     'state' => $selected,
-                    'children' => self::GetListByProduct(['parent_id' => $item->id], $product),
+                    'children' => self::GetListByProduct(['parent_id' => $item->id], $idSelected),
                     'slug' => $item->slug,
                 );
             }

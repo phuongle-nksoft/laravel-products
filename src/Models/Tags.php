@@ -16,16 +16,15 @@ class Tags extends NksoftModel
     /**
      * Get list category to product
      */
-    public static function GetListByProduct($where, $product)
+    public static function GetListByProduct($tagIds = array())
     {
         $data = array();
-        $id = $result->id ?? 0;
         $fs = self::get();
         if ($fs) {
             foreach ($fs as $item) {
                 $selected = array(
                     'opened' => false,
-                    'selected' => $item->id === $id ? true : false,
+                    'selected' => in_array($item->id, $tagIds) ? true : false,
                 );
                 $data[] = array(
                     'text' => $item->name,

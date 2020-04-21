@@ -58,7 +58,7 @@ class NavigationsTableSeeder extends Seeder
             [
                 'title' => 'Tags',
                 'link' => 'tags',
-                'icon' => 'nav-icon fas fa-store-alt',
+                'icon' => 'nav-icon fas fa-tags',
                 'is_active' => true,
                 'roles_id' => json_encode([1, 2]),
                 'order_by' => 5,
@@ -66,7 +66,7 @@ class NavigationsTableSeeder extends Seeder
             [
                 'title' => 'Products',
                 'link' => 'products',
-                'icon' => 'nav-icon fas fa-tags',
+                'icon' => 'nav-icon fas fa-store-alt',
                 'is_active' => true,
                 'roles_id' => json_encode([1, 2]),
                 'order_by' => 6,
