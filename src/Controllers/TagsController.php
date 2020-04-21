@@ -72,8 +72,6 @@ class TagsController extends WebController
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
-                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
                 'selected' => $result && $result->parent_id == 0,
@@ -84,7 +82,7 @@ class TagsController extends WebController
     private function rules()
     {
         $rules = [
-            'name' => 'required',
+            'name' => 'required | unique:tags',
             'images[]' => 'file',
         ];
 

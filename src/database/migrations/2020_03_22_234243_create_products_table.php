@@ -29,6 +29,7 @@ class CreateProductsTable extends Migration
             $table->longText('smell')->nullable();
             $table->integer('views')->nullable()->default(0);
             $table->decimal('rate', 4, 2)->nullable()->default(0);
+            $table->boolean('price_contact')->nullable()->default(0);
             $table->longText('description')->nullable();
             $table->string('slug')->unique();
             $table->string('video_id')->nullable();
