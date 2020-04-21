@@ -21,7 +21,7 @@ use Nksoft\Products\Models\Wishlists;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description'];
+    private $formData = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description', 'price_contact'];
 
     protected $module = 'products';
 
@@ -105,7 +105,7 @@ class ProductsController extends WebController
                 'key' => 'description',
             ],
             [
-                'label' => trans('nksoft::common.Content'),
+                'label' => trans('nksoft::common.Show Comment'),
                 'type' => 'checkbox',
                 'key' => 'show',
                 'class' => 'col-md-1'
@@ -147,6 +147,7 @@ class ProductsController extends WebController
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'sku', 'label' => trans('nksoft::common.Sku'), 'data' => null, 'type' => 'text'],
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'price_contact', 'label' => trans('nksoft::common.Price Contact'), 'data' => null, 'type' => 'checkbox'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
