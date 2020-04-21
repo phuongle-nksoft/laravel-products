@@ -93,7 +93,7 @@ class OrdersController extends WebController
             return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
         }
         $qty = $request->get('qty');
-        $select = ['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug'];
+        $select = ['id', 'name', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug'];
         $with = ['images', 'vintages', 'brands', 'regions', 'professionalsRating'];
         $product = Products::select($select)->where(['id' => $request->get('productId'), 'is_active' => 1])->with($with)->first();
         if (!$product) {

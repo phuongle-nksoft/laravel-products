@@ -538,7 +538,7 @@ class ProductsController extends WebController
     public function getHome()
     {
         try {
-            $ads = Blocks::whereIn('identify', ['campaign1', 'campaign2', 'campaign3', 'campaign4'])->where(['is_active' => 1])->get();
+            $ads = Blocks::where(['is_active' => 1])->with(['images'])->take(9)->offset(2)->get();
             $tags = Tags::take(4)->getQuery();
             $tagIds = $tags->pluck('id')->toArray();
             $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {
