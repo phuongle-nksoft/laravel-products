@@ -362,10 +362,10 @@ class ProductsController extends WebController
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
                 ->with($with)->paginate();
-            $vintages = VintagesProductIndex::where(['vintages_id' => $result->vintages_id])->where('products_id', '<>', $id)
-                ->select($select)
-                ->orderBy('updated_at', 'desc')
-                ->with($with)->paginate();
+
+            $vintages = VintagesProductIndex::whereIn('vintages_id', function ($query) use ($id) {
+                return $query->select('vintages_id')->from(with(new VintagesProductIndex)->getTable())->where(['products_id' => $id])->pluck('vintages_id')->toArray();
+            })->select(['products_id'])->groupBy('products_id')->with(['products'])->get();
             $regions = CurrentModel::where(['is_active' => 1, 'regions_id' => $result->regions_id])->where('id', '<>', $id)
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
