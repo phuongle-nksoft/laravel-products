@@ -25,6 +25,7 @@ class CreatePromotionsTable extends Migration
             $table->boolean('is_active');
             $table->integer('discount_qty')->default(10000)->nullable();
             $table->longText('product_ids')->nullable();
+            $table->boolean('all_products')->nullable()->default(0);
             $table->longText('description')->nullable();
             $table->softDeletes();
             $table->timestamps();

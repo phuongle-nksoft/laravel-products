@@ -10,7 +10,7 @@ use Validator;
 
 class PromotionsController extends WebController
 {
-    private $formData = ['id', 'name', 'code', 'coupon_type', 'discount_amount', 'expice_date', 'start_date', 'is_active', 'discount_qty', 'product_ids', 'description', 'simple_action'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'promotions';
 
@@ -51,6 +51,7 @@ class PromotionsController extends WebController
      */
     public function create()
     {
+        $this->formData = array_merge($this->formData, ['all_products']);
         try {
             $response = [
                 'formElement' => $this->formElement(),
@@ -66,8 +67,10 @@ class PromotionsController extends WebController
 
     private function formElement($result = null)
     {
+        $productIds = $result && $result->product_ids ? json_decode($result->product_ids) : [];
         $status = $this->status();
         $simpleAction = config('nksoft.simpleAction');
+        $products = CurrentModel::GetListByProduct($productIds);
         return [
             [
                 'key' => 'general',
@@ -83,13 +86,21 @@ class PromotionsController extends WebController
                 'key' => 'inputForm',
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
-                    ['key' => 'coupon_type', 'label' => trans('nksoft::products.Coupon Type'), 'data' => $this->status(), 'class' => 'col-md-3', 'type' => 'select'],
+                    ['key' => 'coupon_type', 'label' => trans('nksoft::products.Coupon Type'), 'data' => null, 'class' => 'col-md-3', 'type' => 'checkbox'],
                     ['key' => 'code', 'label' => trans('nksoft::products.Code'), 'data' => null, 'type' => 'text'],
                     ['key' => 'simple_action', 'label' => trans('nksoft::products.Simple Action'), 'data' => $simpleAction, 'type' => 'select'],
                     ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'type' => 'number'],
                     ['key' => 'start_date', 'label' => trans('nksoft::products.From Date'), 'data' => null, 'type' => 'date'],
                     ['key' => 'expice_date', 'label' => trans('nksoft::products.To Date'), 'data' => null, 'type' => 'date'],
                     ['key' => 'discount_qty', 'label' => trans('nksoft::products.Discount Qty'), 'data' => null, 'type' => 'number'],
+                ],
+            ],
+            [
+                'key' => 'products',
+                'label' => trans('nksoft::common.products'),
+                'element' => [
+                    ['key' => 'all_products', 'label' => trans('nksoft::products.All Products'), 'data' => null, 'class' => 'col-md-3', 'type' => 'checkbox'],
+                    ['key' => 'product_ids', 'label' => trans('nksoft::common.products'), 'data' => $products, 'multiple' => true, 'type' => 'tree']
                 ],
             ],
         ];
@@ -133,6 +144,7 @@ class PromotionsController extends WebController
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;
             }
+            // if ($data['product_ids']) $data['product_ids'] = json_encode($data['product_ids']);
             if ($this->validateDate($data['start_date'])) {
                 $data['start_date'] = date('Y-m-d', strtotime($data['start_date']));
             }
@@ -157,7 +169,6 @@ class PromotionsController extends WebController
      */
     public function show($id)
     {
-
     }
 
     /**
@@ -170,8 +181,8 @@ class PromotionsController extends WebController
     {
         try {
             $result = CurrentModel::select($this->formData)->find($id);
-            $result->start_date = $result->start_date ? date('d/m/Y', \strtotime($result->start_date)) : '';
-            $result->expice_date = $result->expice_date ? date('d/m/Y', \strtotime($result->expice_date)) : '';
+            $result->start_date = $result->start_date ? date('m/d/Y', \strtotime($result->start_date)) : '';
+            $result->expice_date = $result->expice_date ? date('m/d/Y', \strtotime($result->expice_date)) : '';
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -208,6 +219,7 @@ class PromotionsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            // if ($data['product_ids']) $data['product_ids'] = $data['product_ids'];
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;
             }

@@ -1,7 +1,7 @@
 <?php
 return [
     'Discount Amount' => 'Giá Trị',
-    'Coupon Type' => 'Loại Mã Giảm Giá',
+    'Coupon Type' => 'Áp Dụng Toolbar',
     'Code' => 'Mã Giảm Giá',
     'Simple Action' => 'Loại Giảm Giá',
     'Discount Amount' => 'Giá Trị Giảm Giá',
@@ -17,4 +17,5 @@ return [
     'Done' => 'Đã giao hàng',
     'Cancel' => 'Hủy Đơn Hàng',
     'Tags' => 'Tags',
+    'All Products' => 'Tất Cả Sản Phẩm'
 ];
