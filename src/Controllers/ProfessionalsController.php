@@ -9,7 +9,7 @@ use Nksoft\Products\Models\Professionals as CurrentModel;
 
 class ProfessionalsController extends WebController
 {
-    private $formData = ['id', 'name', 'short_name', 'description'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'professionals';
 

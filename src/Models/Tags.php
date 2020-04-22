@@ -6,8 +6,9 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Tags extends NksoftModel
 {
+    const FIELDS = ['id', 'name', 'is_active', 'slug', 'description', 'meta_description'];
     protected $table = 'tags';
-    protected $fillable = ['id', 'name', 'is_active', 'slug', 'description', 'meta_description'];
+    protected $fillable = self::FIELDS;
     public function productTags()
     {
         return $this->belongsTo(ProductTags::class, 'tags_id');

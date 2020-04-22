@@ -6,10 +6,11 @@ use Nksoft\Master\Models\NksoftModel;
 
 class ProfessionalRatings extends NksoftModel
 {
+    const FIELDS = ['id', 'professionals_id', 'products_id', 'description', 'ratings', 'show'];
     protected $table = 'professional_ratings';
-    protected $fillable = ['id', 'professionals_id', 'products_id', 'description', 'ratings', 'show'];
+    protected $fillable = self::FIELDS;
     public function professional()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Professionals', 'professionals_id')->select(['id', 'name', 'description', 'short_name']);
+        return $this->belongsTo(Professionals::class, 'professionals_id')->select(Professionals::FIELDS);
     }
 }

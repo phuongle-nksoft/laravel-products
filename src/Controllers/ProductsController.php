@@ -22,7 +22,7 @@ use Nksoft\Products\Models\Wishlists;
 
 class ProductsController extends WebController
 {
-    private $formData = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'order_by', 'video_id', 'price', 'smell', 'rate', 'special_price', 'year_of_manufacture', 'alcohol_content', 'volume', 'slug', 'description', 'meta_description', 'price_contact'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'products';
 
@@ -350,7 +350,7 @@ class ProductsController extends WebController
     public function show($id)
     {
         try {
-            $select = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'];
+            $select = CurrentModel::FIELD;
             $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)

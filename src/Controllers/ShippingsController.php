@@ -9,7 +9,7 @@ use Nksoft\Products\Models\Shipping as CurrentModel;
 
 class ShippingsController extends WebController
 {
-    private $formData = ['id', 'customers_id', 'address', 'phone', 'name', 'company', 'is_default', 'last_shipping', 'note'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'shippings';
 

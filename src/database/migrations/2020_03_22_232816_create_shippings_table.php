@@ -19,6 +19,9 @@ class CreateShippingsTable extends Migration
             $table->string('address')->nullable();
             $table->string('phone');
             $table->string('name');
+            $table->integer('provinces_id')->nullable();
+            $table->integer('districts_id')->nullable();
+            $table->integer('wards_id')->nullable();
             $table->string('company')->nullable();
             $table->boolean('is_default')->default(0)->nullable();
             $table->boolean('last_shipping')->default(0)->nullable();

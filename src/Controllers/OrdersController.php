@@ -93,21 +93,22 @@ class OrdersController extends WebController
             return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
         }
         $qty = $request->get('qty');
-        $select = ['id', 'name', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug'];
+        $select = ['id', 'name', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug', 'price_contact'];
         $with = ['images', 'vintages', 'brands', 'regions', 'professionalsRating'];
         $product = Products::select($select)->where(['id' => $request->get('productId'), 'is_active' => 1])->with($with)->first();
         if (!$product) {
             return \response()->json(['status' => 'error', 'message' => '404']);
         }
         $allCarts = $request->session()->get(config('nksoft.addCart')) ?? [];
+        $subtotal = $product->special_price ? $product->special_price * $qty : $product->price * $qty;
         $itemCart = array(
             'rowId' => md5(time()),
             'qty' => $qty,
             'product_id' => $product->id,
-            'subtotal' => $product->special_price ? $product->special_price * $qty : $product->price * $qty,
+            'subtotal' => $product->price_contact ? 0 : $subtotal,
             'name' => $product->name,
-            'price' => $product->price,
-            'special_price' => $product->special_price,
+            'price' => $product->price_contact ? 0 : $product->price,
+            'special_price' => $product->price_contact ? 0 : $product->special_price,
             'images' => $product->images()->first(),
             'professionals_rating' => $product->professionalsRating,
             'vintages' => $product->vintages,
@@ -115,6 +116,7 @@ class OrdersController extends WebController
             'brands' => $product->brands,
             'slug' => $product->slug,
             'discount' => 0,
+            'price_contact' => $product->price_contact,
         );
         if (!$allCarts) {
             $allCarts = [];
@@ -127,7 +129,8 @@ class OrdersController extends WebController
                 foreach ($allCarts as $key => $item) {
                     if ($item['product_id'] == $product->id) {
                         $allCarts[$key]['qty'] += $qty;
-                        $allCarts[$key]['subtotal'] = $product->special_price ? $product->special_price * $allCarts[$key]['qty'] : $product->price * $allCarts[$key]['qty'];
+                        $sbt = $product->special_price ? $product->special_price * $allCarts[$key]['qty'] : $product->price * $allCarts[$key]['qty'];
+                        $allCarts[$key]['subtotal'] = $product->price_contact ? 0 : $sbt;
                     }
                 }
             }

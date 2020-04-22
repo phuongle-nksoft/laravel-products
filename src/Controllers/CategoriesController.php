@@ -11,7 +11,7 @@ use Nksoft\Products\Models\Products;
 
 class CategoriesController extends WebController
 {
-    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'page_template', 'meta_description'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'categories';
 

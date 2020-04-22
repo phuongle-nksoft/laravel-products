@@ -10,7 +10,7 @@ use Nksoft\Products\Models\Products;
 
 class BrandsController extends WebController
 {
-    private $formData = ['id', 'name', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'brands';
 

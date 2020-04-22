@@ -11,7 +11,7 @@ use Nksoft\Products\Models\VintagesProductIndex;
 
 class VintagesController extends WebController
 {
-    private $formData = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'video_id', 'description', 'meta_description'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'vintages';
 

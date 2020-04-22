@@ -12,7 +12,7 @@ use \Arr;
 
 class CustomersController extends WebController
 {
-    private $formData = ['id', 'is_active', 'name', 'email', 'password', 'phone'];
+    private $formData = CurrentModel::FIELDS;
 
     protected $module = 'customers';
 

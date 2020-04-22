@@ -6,18 +6,19 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Regions extends NksoftModel
 {
+    const FIELDS = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'meta_description'];
     protected $table = 'regions';
-    protected $fillable = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'meta_description'];
+    protected $fillable = self::FIELDS;
 
     public function parent()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\Regions', 'parent_id')->with(['images'])->select(['id', 'name', 'parent_id', 'slug']);
+        return $this->belongsTo(Regions::class, 'parent_id')->with(['images'])->select(['id', 'name', 'parent_id', 'slug']);
     }
 
     public function products()
     {
-        return $this->hasMany('\Nksoft\Products\Models\Products', 'regions_id')->where(['is_active' => 1])
-            ->select(['id', 'name', 'vintages_id', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description', 'views'])
+        return $this->hasMany(Products::class, 'regions_id')->where(['is_active' => 1])
+            ->select(Products::FIELDS)
             ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
     }
 
