@@ -358,21 +358,45 @@ class ProductsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $brands = CurrentModel::where(['is_active' => 1, 'brands_id' => $result->brands_id])->where('id', '<>', $id)
-                ->select($select)
-                ->orderBy('updated_at', 'desc')
-                ->with($with)->paginate();
 
-            $vintages = VintagesProductIndex::whereIn('vintages_id', function ($query) use ($id) {
-                return $query->select('vintages_id')->from(with(new VintagesProductIndex)->getTable())->where(['products_id' => $id])->pluck('vintages_id')->toArray();
-            })->select(['products_id'])->groupBy('products_id')->with(['products'])->get();
-            $regions = CurrentModel::where(['is_active' => 1, 'regions_id' => $result->regions_id])->where('id', '<>', $id)
+            //get brand products
+            $brands = CurrentModel::where(['is_active' => 1, 'brands_id' => $result->brands_id])
+                ->where('id', '<>', $id)
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
-                ->with($with)->paginate();
-            $productInCategory = CategoryProductsIndex::whereIn('categories_id', function ($query) use ($id) {
-                return $query->select('categories_id')->from(with(new CategoryProductsIndex)->getTable())->where(['products_id' => $id])->pluck('categories_id')->toArray();
-            })->select(['products_id'])->groupBy('products_id')->with(['products'])->get();
+                ->with($with)
+                ->take(15)->get();
+            //get vintages products
+            $vintagesId = VintagesProductIndex::where(['products_id' => $id])->pluck('vintages_id');
+            $vintages = CurrentModel::whereIn('id', function ($query) use ($vintagesId) {
+                $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->whereIn('vintages_id', $vintagesId)->groupBy('products_id')->pluck('products_id');
+            })->where(['is_active' => 1])
+                ->where('id', '<>', $id)
+                ->orderBy('order_by', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->with($with)
+                ->take(15)->get();
+
+            //get regions product
+            $regions = CurrentModel::where(['is_active' => 1, 'regions_id' => $result->regions_id])
+                ->where('id', '<>', $id)
+                ->select($select)
+                ->orderBy('order_by', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->with($with)->take(15)->get();
+
+            //get list other product
+            $listCategoryIds = CategoryProductsIndex::where(['products_id' => $id])->pluck('categories_id');
+            $productInCategory = CurrentModel::whereIn('id', function ($query) use ($listCategoryIds) {
+                $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listCategoryIds)->groupBy('products_id')->pluck('products_id');
+            })->where(['is_active' => 1])
+                ->where('id', '<>', $id)
+                ->orderBy('order_by', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->with($with)
+                ->take(15)->get();
+
+            //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
             $response = [
                 'result' => $result,
@@ -382,7 +406,7 @@ class ProductsController extends WebController
                 'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
                 'breadcrumb' => [
-                    ['link' => '/', 'label' => \trans('nksoft::common.Home')],
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
             ];

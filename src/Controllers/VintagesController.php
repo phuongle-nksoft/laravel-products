@@ -183,7 +183,9 @@ class VintagesController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = VintagesProductIndex::select(['products_id'])->whereIn('vintages_id', $listIds)->groupBy('products_id')->with(['products']);
+            $products = Products::whereIn('id', function ($query) use ($listIds) {
+                $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->whereIn('vintages_id', $listIds)->groupBy('products_id')->pluck('products_id');
+            })->where(['is_active' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),

@@ -163,7 +163,7 @@ class BrandsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['brands_id' => $id, 'is_active' => 1])->select(['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description'])
+            $products = Products::where(['brands_id' => $id, 'is_active' => 1])
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $response = [
                 'result' => $result,

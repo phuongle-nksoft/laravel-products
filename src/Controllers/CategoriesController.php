@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Categories as CurrentModel;
 use Nksoft\Products\Models\CategoryProductsIndex;
+use Nksoft\Products\Models\Products;
 
 class CategoriesController extends WebController
 {
@@ -195,7 +196,9 @@ class CategoriesController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = CategoryProductsIndex::select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->with(['products']);
+            $products = Products::whereIn('id', function ($query) use ($listIds) {
+                $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->pluck('products_id');
+            })->where(['is_active' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
