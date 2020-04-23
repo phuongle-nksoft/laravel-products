@@ -101,6 +101,8 @@ class OrdersController extends WebController
         }
         $allCarts = $request->session()->get(config('nksoft.addCart')) ?? [];
         $subtotal = $product->special_price ? $product->special_price * $qty : $product->price * $qty;
+        $promotion = session('discount');
+        $productIds = json_decode($promotion->product_ids);
         $itemCart = array(
             'rowId' => md5(time()),
             'qty' => $qty,
@@ -135,7 +137,19 @@ class OrdersController extends WebController
                 }
             }
         }
-        $request->session()->put(config('nksoft.addCart'), $allCarts);
+        if ($allCarts) {
+            foreach ($allCarts as $key => $item) {
+                $discount = $promotion->simple_action == 1 ? ($promotion->discount_amount / 100) * $item['price'] : $promotion->discount_amount;
+                if ($promotion->all_products) {
+                    $allCarts[$key]['discount'] = $discount;
+                } else if ($promotion->product_ids) {
+                    if (count($productIds) > 0 && in_array($item['product_id'], $productIds)) {
+                        $allCarts[$key]['discount'] = $discount;
+                    }
+                }
+            }
+        }
+        session([config('nksoft.addCart') => $allCarts]);
         return $this->responseViewSuccess($allCarts);
     }
 
@@ -155,13 +169,29 @@ class OrdersController extends WebController
 
     public function discount(Request $request)
     {
-        $cart = session()->get(config('nksoft.addCart'));
         $code = $request->get('code');
         $today = Date('Y-m-d');
-        $promotion = Promotions::select(['id', 'code', 'simple_action', 'discount_amount'])->where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null)', $today)->where('start_date', '<=', $today)->first();
+        $promotion = Promotions::where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null)', $today)->where('start_date', '<=', $today)->first();
         if (!$promotion) {
             return $this->responseError(['Mã code không hợp lệ']);
         }
-        return $this->responseViewSuccess(['discount' => $promotion], ['Mã code đã được áp dụng.']);
+        $cart = session(config('nksoft.addCart'));
+        $productIds = json_decode($promotion->product_ids);
+        if ($cart) {
+            foreach ($cart as $item) {
+                $discount = $promotion->simple_action == 1 ? ($promotion->discount_amount / 100) * $item['price'] : $promotion->discount_amount;
+                if ($promotion->all_products) {
+                    $item['discount'] = $discount;
+                } else if ($promotion->product_ids) {
+                    if (count($productIds) > 0 && in_array($item['product_id'], $productIds)) {
+                        $item['discount'] = $discount;
+                    }
+                }
+            }
+        }
+
+        session([config('nksoft.addCart') => $cart]);
+        session(['discount' => $promotion]);
+        return $this->responseViewSuccess(['discount' => $promotion, 'cart' => $cart], ['Mã code đã được áp dụng.']);
     }
 }
