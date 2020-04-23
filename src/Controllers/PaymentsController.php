@@ -109,6 +109,7 @@ class PaymentsController extends WebController
         }
         $promotion = $request->get('discount');
         $total = collect($cart)->sum('subtotal');
+        $price_contact = collect($cart)->firstWhere('price_contact', 1);
         if ($promotion) {
             $discountAmount = $promotion['simple_action'] == 1 ? $promotion['discount_amount'] / 100 * $total : $promotion['discount_amount'];
             $total = $total - $discountAmount;
@@ -120,7 +121,9 @@ class PaymentsController extends WebController
             'discount_code' => $promotion['code'] ?? '',
             'promotion_id' => $promotion['id'] ?? 0,
             'discount_amount' => $promotion['discount_amount'] ?? 0.00,
-            'total' => collect($cart)->sum('subtotal'),
+            'total' => $total,
+            'order_id' => bin2hex(random_bytes(4)),
+            'price_contact' => $price_contact ? 1 : 0,
         ];
         $order = Orders::create($orderData);
         if ($order) {
@@ -134,10 +137,16 @@ class PaymentsController extends WebController
                     'name' => $item['name'],
                     'price' => $item['price'],
                     'special_price' => $item['special_price'],
-
                 ];
             }
             OrderDetails::insert($dataDetails);
+            if ($price_contact) {
+                $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
+                session(['order' => $order]);
+                $this->resetSession($order);
+                return $this->responseViewSuccess(['url' => url('success')]);
+            }
+
             $vnp_Url = $this->vnpayUrl($order, $request);
             return $this->responseViewSuccess(['url' => $vnp_Url]);
         }
@@ -213,13 +222,18 @@ class PaymentsController extends WebController
             $order = Orders::find($orderId);
             $order->status = 2;
             $order->save();
-            $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders', 'wishlists'])->first();
-            session()->put('user', $customer);
-            session()->forget(config('nksoft.addCart'));
+            $this->resetSession($order);
             return redirect('success');
         } else {
             Orders::where(['id' => $orderId])->forceDelete();
             return redirect('fails');
         }
+    }
+
+    private function resetSession($order)
+    {
+        $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders', 'wishlists'])->first();
+        session()->put('user', $customer);
+        session()->forget(config('nksoft.addCart'));
     }
 }

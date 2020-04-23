@@ -250,8 +250,9 @@ class CustomersController extends WebController
         }
         if (\Hash::check($credentials['password'], $customer->password)) {
             session()->put('user', $customer);
-            return $this->responseViewSuccess(['user' => $customer]);
+            return $this->responseViewSuccess(['user' => $customer], []);
         }
+        session()->forget('user');
         return $this->responseError([trans('nksoft::login.Email or password is incorrect!')]);
     }
 

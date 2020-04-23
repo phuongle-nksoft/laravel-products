@@ -17,5 +17,8 @@ return [
     'Done' => 'Đã giao hàng',
     'Cancel' => 'Hủy Đơn Hàng',
     'Tags' => 'Tags',
-    'All Products' => 'Tất Cả Sản Phẩm'
+    'All Products' => 'Tất Cả Sản Phẩm',
+    'Province' => 'Tỉnh - Thành Phố',
+    'District' => 'Quận - Huyện',
+    'Wards' => 'Phường - Xã',
 ];

@@ -22,6 +22,7 @@ class CreateOrdersTable extends Migration
             $table->decimal('discount_amount', 12, 2)->nullable();
             $table->decimal('total', 12, 2)->nullable();
             $table->integer('status')->nullable()->default(0);
+            $table->string('order_id');
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('customers_id', 'orders_customers_id_foreign')->references('id')->on('customers')->onDelete('cascade');

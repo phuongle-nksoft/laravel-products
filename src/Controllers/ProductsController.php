@@ -153,6 +153,7 @@ class ProductsController extends WebController
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'price_contact', 'label' => trans('nksoft::common.Price Contact'), 'data' => null, 'type' => 'checkbox'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
                     ['key' => 'smell', 'label' => trans('nksoft::common.Smell'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
@@ -190,6 +191,7 @@ class ProductsController extends WebController
             'vintages_id' => 'required',
             'regions_id' => 'required',
             'brands_id' => 'required',
+            'qty' => 'required',
             'images[]' => 'file',
         ];
 
@@ -207,7 +209,7 @@ class ProductsController extends WebController
             'sku.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Sku')]),
             'price.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Price')]),
             'alcohol_content.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Alcohol Content')]),
-            'volume.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Volume')]),
+            'qty.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Qty')]),
         ];
     }
     /**
@@ -254,12 +256,13 @@ class ProductsController extends WebController
         $productsId = $result->id;
         $professionalRating = \json_decode($request->get('professionals_rating'));
         $professionalIds = collect($professionalRating)->pluck('professionals_id')->all();
-        if (!$professionalIds) {
-            return;
-        }
 
         /** Delete record by category id not in list */
-        ProfessionalRatings::where(['products_id' => $productsId])->whereNotIn('professionals_id', $professionalIds)->forceDelete();
+        $deleteProfessional = ProfessionalRatings::where(['products_id' => $productsId]);
+        if (!$professionalIds) {
+            $deleteProfessional->whereNotIn('professionals_id', $professionalIds);
+        }
+        $deleteProfessional->forceDelete();
 
         /** Save new record */
         foreach ($professionalRating as $data) {
@@ -350,7 +353,7 @@ class ProductsController extends WebController
     public function show($id)
     {
         try {
-            $select = CurrentModel::FIELD;
+            $select = CurrentModel::FIELDS;
             $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)

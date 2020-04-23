@@ -33,7 +33,9 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('logout', 'CustomersController@logout');
         Route::get('myWine/{customerId}', 'CustomersController@myWine');
         Route::post('shippings', 'ShippingsController@store');
+        Route::put('shippings/{id}', 'ShippingsController@update');
         Route::delete('shippings/{id}', 'ShippingsController@destroy');
+        Route::get('provinces', 'ShippingsController@getProvinces');
         Route::post('payments', 'PaymentsController@store');
         Route::get('payments/{service}/callback', 'PaymentsController@callback');
         Route::post('addWishlist', 'ProductsController@addWishlist');

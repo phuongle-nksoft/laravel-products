@@ -105,10 +105,10 @@ class OrdersController extends WebController
             'rowId' => md5(time()),
             'qty' => $qty,
             'product_id' => $product->id,
-            'subtotal' => $product->price_contact ? 0 : $subtotal,
+            'subtotal' => $subtotal,
             'name' => $product->name,
-            'price' => $product->price_contact ? 0 : $product->price,
-            'special_price' => $product->price_contact ? 0 : $product->special_price,
+            'price' => $product->price,
+            'special_price' => $product->special_price,
             'images' => $product->images()->first(),
             'professionals_rating' => $product->professionalsRating,
             'vintages' => $product->vintages,
@@ -130,7 +130,7 @@ class OrdersController extends WebController
                     if ($item['product_id'] == $product->id) {
                         $allCarts[$key]['qty'] += $qty;
                         $sbt = $product->special_price ? $product->special_price * $allCarts[$key]['qty'] : $product->price * $allCarts[$key]['qty'];
-                        $allCarts[$key]['subtotal'] = $product->price_contact ? 0 : $sbt;
+                        $allCarts[$key]['subtotal'] = $sbt;
                     }
                 }
             }

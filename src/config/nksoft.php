@@ -17,5 +17,6 @@ return [
         ['id' => 3, 'name' => trans('nksoft::products.Shipping')],
         ['id' => 4, 'name' => trans('nksoft::products.Done')],
         ['id' => 5, 'name' => trans('nksoft::products.Cancel')],
+        ['id' => 6, 'name' => trans('nksoft::common.Price Contact')],
     ],
 ];

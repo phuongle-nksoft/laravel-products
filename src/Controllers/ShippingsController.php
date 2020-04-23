@@ -5,6 +5,7 @@ namespace Nksoft\Products\Controllers;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Customers;
+use Nksoft\Products\Models\Provinces;
 use Nksoft\Products\Models\Shipping as CurrentModel;
 
 class ShippingsController extends WebController
@@ -40,6 +41,7 @@ class ShippingsController extends WebController
             'address' => 'required',
             'name' => 'required',
             'phone' => 'required',
+            'provinces_id' => 'required',
         ];
         return $rules;
     }
@@ -47,9 +49,10 @@ class ShippingsController extends WebController
     private function message()
     {
         return [
-            'address' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::settings.Address')]),
-            'name' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
-            'phone' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::users.Phone')]),
+            'address.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::settings.Address')]),
+            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
+            'phone.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::users.Phone')]),
+            'provinces_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Province')]),
         ];
     }
 
@@ -119,7 +122,31 @@ class ShippingsController extends WebController
      */
     public function update(Request $request, $id)
     {
-        //
+        $validator = Validator($request->all(), $this->rules(), $this->message());
+        if ($validator->fails()) {
+            return $this->responseError($validator->errors());
+        }
+        try {
+            $data = [];
+            foreach ($this->formData as $item) {
+                if ($item != 'images') {
+                    $data[$item] = $request->get($item);
+                }
+            }
+            if ($data['is_default']) {
+                CurrentModel::where(['customers_id' => $data['customers_id']])->update(['is_default' => 0, 'last_shipping' => 0]);
+            }
+            $shipping = CurrentModel::updateOrCreate(['id' => $id], $data);
+            $customer = Customers::where(['id' => $data['customers_id']])->with('shipping')->first();
+            session()->put('user', $customer);
+            $response = [
+                'user' => $customer,
+                'shipping' => $shipping,
+            ];
+            return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
     }
 
     /**
@@ -140,6 +167,20 @@ class ShippingsController extends WebController
                 'user' => $customer,
             ];
             return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function getProvinces()
+    {
+
+        try {
+            $provinces = Provinces::with(['districts'])->get();
+            $response = [
+                'provinces' => $provinces,
+            ];
+            return $this->responseViewSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }

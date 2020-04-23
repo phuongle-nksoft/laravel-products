@@ -8,4 +8,9 @@ class Provinces extends NksoftModel
     const FIELDS = ['id', 'name'];
     protected $table = 'provinces';
     protected $fillable = self::FIELDS;
+
+    public function districts()
+    {
+        return $this->hasMany(Districts::class, 'provinces_id')->select(Districts::FIELDS)->with(['wards']);
+    }
 }
