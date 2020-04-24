@@ -102,7 +102,11 @@ class OrdersController extends WebController
         $allCarts = $request->session()->get(config('nksoft.addCart')) ?? [];
         $subtotal = $product->special_price ? $product->special_price * $qty : $product->price * $qty;
         $promotion = session('discount');
-        $productIds = json_decode($promotion->product_ids);
+        $productIds = [];
+        if ($promotion && $promotion->product_ids) {
+            $productIds = json_decode($promotion->product_ids);
+        }
+
         $itemCart = array(
             'rowId' => md5(time()),
             'qty' => $qty,
@@ -137,7 +141,7 @@ class OrdersController extends WebController
                 }
             }
         }
-        if ($allCarts) {
+        if ($allCarts && $promotion) {
             foreach ($allCarts as $key => $item) {
                 $discount = $promotion->simple_action == 1 ? ($promotion->discount_amount / 100) * $item['price'] : $promotion->discount_amount;
                 if ($promotion->all_products) {
