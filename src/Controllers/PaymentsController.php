@@ -39,10 +39,10 @@ class PaymentsController extends WebController
         $vnp_TmnCode = env('VNP_TMNCODE'); //Mã website tại VNPAY
         $vnp_HashSecret = env('VNP_HASHSECRET'); //Chuỗi bí mật
 
-        $vnp_TxnRef = $order->id;
+        $vnp_TxnRef = $order['order_id'];
         $vnp_OrderInfo = 'Thanh toan website';
         $vnp_OrderType = 'billpayment';
-        $vnp_Amount = $order->total * 100;
+        $vnp_Amount = $order['total'] * 100;
         $vnp_Locale = config('app.locale');
         $vnp_BankCode = $request->get('bankActive');
         $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
@@ -109,10 +109,10 @@ class PaymentsController extends WebController
         }
         $promotion = $request->get('discount');
         $total = collect($cart)->sum('subtotal');
+        $discount = collect($cart)->sum('discount');
         $price_contact = collect($cart)->firstWhere('price_contact', 1);
         if ($promotion) {
-            $discountAmount = $promotion['simple_action'] == 1 ? $promotion['discount_amount'] / 100 * $total : $promotion['discount_amount'];
-            $total = $total - $discountAmount;
+            $total = $total - $discount;
         }
         $orderData = [
             'shippings_id' => $request->get('shippings_id'),
@@ -125,31 +125,47 @@ class PaymentsController extends WebController
             'order_id' => bin2hex(random_bytes(4)),
             'price_contact' => $price_contact ? 1 : 0,
         ];
-        $order = Orders::create($orderData);
-        if ($order) {
+        if ($price_contact) {
+            $order = Orders::create($orderData);
+            if ($order) {
+                $dataDetails = [];
+                foreach ($cart as $item) {
+                    $dataDetails[] = [
+                        'orders_id' => $order->id,
+                        'products_id' => $item['product_id'],
+                        'qty' => $item['qty'],
+                        'subtotal' => $item['subtotal'],
+                        'name' => $item['name'],
+                        'price' => $item['price'],
+                        'discount' => $item['discount'],
+                        'special_price' => $item['special_price'],
+                    ];
+                }
+                OrderDetails::insert($dataDetails);
+                $this->resetSession($order);
+                $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
+                session(['order' => $order]);
+                return $this->responseViewSuccess(['url' => url('success')]);
+            }
+        } else {
             $dataDetails = [];
             foreach ($cart as $item) {
                 $dataDetails[] = [
-                    'orders_id' => $order->id,
                     'products_id' => $item['product_id'],
                     'qty' => $item['qty'],
                     'subtotal' => $item['subtotal'],
                     'name' => $item['name'],
                     'price' => $item['price'],
+                    'discount' => $item['discount'],
                     'special_price' => $item['special_price'],
                 ];
             }
-            OrderDetails::insert($dataDetails);
-            if ($price_contact) {
-                $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
-                session(['order' => $order]);
-                $this->resetSession($order);
-                return $this->responseViewSuccess(['url' => url('success')]);
-            }
-
-            $vnp_Url = $this->vnpayUrl($order, $request);
+            $orderData['dataDetails'] = $dataDetails;
+            session(['orderPayment' => $orderData]);
+            $vnp_Url = $this->vnpayUrl($orderData, $request);
             return $this->responseViewSuccess(['url' => $vnp_Url]);
         }
+
         return $this->responseError(['Đơn hàng chưa được tạo']);
     }
 
@@ -200,32 +216,59 @@ class PaymentsController extends WebController
 
     public function callback(Request $request, $service)
     {
-        $orderId = $request->get('vnp_TxnRef');
         $responseCode = $request->get('vnp_ResponseCode');
-        $data = array(
-            'Amount' => $request->get('vnp_Amount'),
-            'BankCode' => $request->get('vnp_BankCode'),
-            'BankTranNo' => $request->get('vnp_BankTranNo'),
-            'CardType' => $request->get('vnp_CardType'),
-            'OrderInfo' => $request->get('vnp_OrderInfo'),
-            'PayDate' => $request->get('vnp_PayDate'),
-            'ResponseCode' => $request->get('vnp_ResponseCode'),
-            'TmnCode' => $request->get('vnp_TmnCode'),
-            'TransactionNo' => $request->get('vnp_TransactionNo'),
-            'TxnRef' => $request->get('vnp_TxnRef'),
-            'orders_id' => $orderId,
-            'SecureHashType' => $request->get('vnp_SecureHashType'),
-            'SecureHash' => $request->get('vnp_SecureHash'),
-        );
         if ($responseCode == '00') {
+            $orderPayment = session('orderPayment');
+            $orderData = [
+                'shippings_id' => $orderPayment['shippings_id'],
+                'customers_id' => $orderPayment['customers_id'],
+                'status' => 2,
+                'discount_code' => $orderPayment['discount_code'],
+                'promotion_id' => $orderPayment['promotion_id'],
+                'discount_amount' => $orderPayment['discount_amount'],
+                'total' => $orderPayment['total'],
+                'order_id' => $orderPayment['order_id'],
+                'price_contact' => $orderPayment['price_contact'],
+            ];
+            $order = Orders::create($orderData);
+            $orderPaymentDetails = $orderPayment['dataDetails'];
+            if ($order) {
+                $dataDetails = [];
+                foreach ($orderPaymentDetails as $item) {
+                    $dataDetails[] = [
+                        'orders_id' => $order->id,
+                        'products_id' => $item['products_id'],
+                        'qty' => $item['qty'],
+                        'subtotal' => $item['subtotal'],
+                        'name' => $item['name'],
+                        'price' => $item['price'],
+                        'discount' => $item['discount'],
+                        'special_price' => $item['special_price'],
+                    ];
+                }
+                OrderDetails::insert($dataDetails);
+            }
+            $data = array(
+                'Amount' => $request->get('vnp_Amount'),
+                'BankCode' => $request->get('vnp_BankCode'),
+                'BankTranNo' => $request->get('vnp_BankTranNo'),
+                'CardType' => $request->get('vnp_CardType'),
+                'OrderInfo' => $request->get('vnp_OrderInfo'),
+                'PayDate' => $request->get('vnp_PayDate'),
+                'ResponseCode' => $request->get('vnp_ResponseCode'),
+                'TmnCode' => $request->get('vnp_TmnCode'),
+                'TransactionNo' => $request->get('vnp_TransactionNo'),
+                'TxnRef' => $request->get('vnp_TxnRef'),
+                'orders_id' => $order->id,
+                'SecureHashType' => $request->get('vnp_SecureHashType'),
+                'SecureHash' => $request->get('vnp_SecureHash'),
+            );
             CurrentModel::create($data);
-            $order = Orders::find($orderId);
-            $order->status = 2;
-            $order->save();
+            $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
+            session(['order' => $order]);
             $this->resetSession($order);
             return redirect('success');
         } else {
-            Orders::where(['id' => $orderId])->forceDelete();
             return redirect('fails');
         }
     }
@@ -235,5 +278,6 @@ class PaymentsController extends WebController
         $customer = Customers::where(['id' => $order->customers_id])->with(['shipping', 'orders', 'wishlists'])->first();
         session()->put('user', $customer);
         session()->forget(config('nksoft.addCart'));
+        session()->forget('orderPayment');
     }
 }

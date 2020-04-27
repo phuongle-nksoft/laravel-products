@@ -49,4 +49,9 @@ class Products extends NksoftModel
     {
         return $this->hasMany(ProductTags::class, 'products_id');
     }
+
+    public function productOptional()
+    {
+        return $this->hasOne(ProductOptional::class, 'products_id')->with(['images']);
+    }
 }

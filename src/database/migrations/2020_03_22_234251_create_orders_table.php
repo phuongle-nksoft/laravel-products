@@ -23,6 +23,7 @@ class CreateOrdersTable extends Migration
             $table->decimal('total', 12, 2)->nullable();
             $table->integer('status')->nullable()->default(0);
             $table->string('order_id');
+            $table->boolean('price_contact')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('customers_id', 'orders_customers_id_foreign')->references('id')->on('customers')->onDelete('cascade');
@@ -39,10 +40,8 @@ class CreateOrdersTable extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropForeign('orders_customers_id_foreign');
-            $table->dropForeign('orders_products_id_foreign');
             $table->dropForeign('orders_shippings_id_foreign');
             $table->dropIndex('orders_customers_id_index');
-            $table->dropIndex('orders_products_id_index');
             $table->dropIndex('orders_shippings_id_index');
         });
         Schema::dropIfExists('orders');

@@ -21,6 +21,7 @@ class CreateOrderDetailsTable extends Migration
             $table->decimal('price', 12, 2)->nullable()->default(0);
             $table->decimal('special_price', 12, 2)->nullable()->default(0);
             $table->decimal('subtotal', 12, 2)->nullable()->default(0);
+            $table->decimal('discount', 12, 2)->nullable()->default(0);
             $table->string('name')->nullable();
             $table->softDeletes();
             $table->timestamps();
@@ -36,7 +37,7 @@ class CreateOrderDetailsTable extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
+        Schema::table('order_details', function (Blueprint $table) {
             $table->dropForeign('order_details_orders_id_foreign');
             $table->dropForeign('order_details_products_id_foreign');
             $table->dropIndex('order_details_orders_id_index');

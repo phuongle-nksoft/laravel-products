@@ -92,7 +92,6 @@ class PromotionsController extends WebController
                     ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'type' => 'number'],
                     ['key' => 'start_date', 'label' => trans('nksoft::products.From Date'), 'data' => null, 'type' => 'date'],
                     ['key' => 'expice_date', 'label' => trans('nksoft::products.To Date'), 'data' => null, 'type' => 'date'],
-                    ['key' => 'discount_qty', 'label' => trans('nksoft::products.Discount Qty'), 'data' => null, 'type' => 'number'],
                 ],
             ],
             [
@@ -100,7 +99,7 @@ class PromotionsController extends WebController
                 'label' => trans('nksoft::common.products'),
                 'element' => [
                     ['key' => 'all_products', 'label' => trans('nksoft::products.All Products'), 'data' => null, 'class' => 'col-md-3', 'type' => 'checkbox'],
-                    ['key' => 'product_ids', 'label' => trans('nksoft::common.products'), 'data' => $products, 'multiple' => true, 'type' => 'tree']
+                    ['key' => 'product_ids', 'label' => trans('nksoft::common.products'), 'data' => $products, 'multiple' => true, 'type' => 'tree'],
                 ],
             ],
         ];
@@ -132,7 +131,7 @@ class PromotionsController extends WebController
     {
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            return $this->responseError([$validator->errors()]);
         }
         try {
             $data = [];
@@ -144,7 +143,10 @@ class PromotionsController extends WebController
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;
             }
-            // if ($data['product_ids']) $data['product_ids'] = json_encode($data['product_ids']);
+            $productIds = json_decode($data['product_ids']);
+            if (!$productIds && !$data['all_products']) {
+                return $this->responseError(['Vui lòng chọn sản phẩm giảm giá!']);
+            }
             if ($this->validateDate($data['start_date'])) {
                 $data['start_date'] = date('Y-m-d', strtotime($data['start_date']));
             }
@@ -157,7 +159,7 @@ class PromotionsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError([$e->getMessage()]);
         }
     }
 
@@ -210,7 +212,7 @@ class PromotionsController extends WebController
         }
         $validator = Validator($request->all(), $this->rules($id), $this->message());
         if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            return $this->responseError($validator->errors());
         }
         try {
             $data = [];
@@ -222,6 +224,10 @@ class PromotionsController extends WebController
             // if ($data['product_ids']) $data['product_ids'] = $data['product_ids'];
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;
+            }
+            $productIds = json_decode($data['product_ids']);
+            if (!$productIds && !$data['all_products']) {
+                return $this->responseError(['Vui lòng chọn sản phẩm giảm giá!']);
             }
             if ($this->validateDate($data['start_date'])) {
                 $data['start_date'] = date('Y-m-d', strtotime($data['start_date']));
@@ -238,7 +244,7 @@ class PromotionsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError([$e->getMessage()]);
         }
     }
 }

@@ -12,7 +12,7 @@ class Regions extends NksoftModel
 
     public function parent()
     {
-        return $this->belongsTo(Regions::class, 'parent_id')->with(['images'])->select(['id', 'name', 'parent_id', 'slug']);
+        return $this->belongsTo(Regions::class, 'parent_id')->with(['images']);
     }
 
     public function products()

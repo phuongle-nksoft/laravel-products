@@ -11,7 +11,7 @@ class Tags extends NksoftModel
     protected $fillable = self::FIELDS;
     public function productTags()
     {
-        return $this->belongsTo(ProductTags::class, 'tags_id');
+        return $this->hasMany(ProductTags::class, 'tags_id')->with('products');
     }
 
     /**

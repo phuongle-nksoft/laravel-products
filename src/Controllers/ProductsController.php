@@ -10,6 +10,7 @@ use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\ProductComments;
+use Nksoft\Products\Models\ProductOptional;
 use Nksoft\Products\Models\Products as CurrentModel;
 use Nksoft\Products\Models\ProductTags;
 use Nksoft\Products\Models\ProfessionalRatings;
@@ -26,8 +27,8 @@ class ProductsController extends WebController
 
     protected $module = 'products';
 
-    protected $excFields = ['images', 'categories_id', 'id', 'vintages_id'];
-    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id'];
+    protected $excFields = ['images', 'categories_id', 'id', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner'];
+    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner'];
 
     protected $model = CurrentModel::class;
     /**
@@ -160,6 +161,7 @@ class ProductsController extends WebController
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
                     ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $date, 'class' => 'col-12 col-lg-4', 'type' => 'select'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
+                    ['key' => 'tags', 'label' => trans('nksoft::common.tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
@@ -176,8 +178,12 @@ class ProductsController extends WebController
                 'key' => 'childProducts',
                 'label' => trans('nksoft::common.Extra'),
                 'element' => [
-                    // ['key' => 'child_product', 'label' => trans('nksoft::common.Child Product'), 'data' => null, 'type' => 'tree', 'multiple' => true],
-                    ['key' => 'tags', 'label' => trans('nksoft::common.tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
+                    ['key' => 'optionals_id', 'label' => '', 'data' => null, 'class' => 'hidden', 'type' => 'hidden'],
+                    ['key' => 'optionals_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => '', 'type' => 'text'],
+                    ['key' => 'optionals_description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
+                    ['key' => 'optionals_video', 'label' => 'Video', 'data' => null, 'type' => 'text'],
+                    ['key' => 'optionals_banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
+                    ['key' => 'optionals_images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                 ],
             ],
         ];
@@ -222,7 +228,7 @@ class ProductsController extends WebController
     {
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            return $this->responseError($validator->errors());
         }
         try {
             $data = [];
@@ -238,6 +244,7 @@ class ProductsController extends WebController
             $this->setProfessionalRating($request, $result);
             $this->setVintagesProductsIndex($request, $result);
             $this->setTags($request, $result);
+            $this->setOptionals($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -247,7 +254,7 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e->getMessage());
+            return $this->responseError([$e->getMessage()]);
         }
     }
 
@@ -265,16 +272,19 @@ class ProductsController extends WebController
         $deleteProfessional->forceDelete();
 
         /** Save new record */
-        foreach ($professionalRating as $data) {
-            $dataRatings = [
-                'products_id' => $productsId,
-                'professionals_id' => $data->professionals_id,
-                'description' => $data->description,
-                'ratings' => $data->ratings,
-                'show' => $data->show ?? 0,
-            ];
-            ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id, 'products_id' => $productsId], $dataRatings);
+        if ($professionalRating) {
+            foreach ($professionalRating as $data) {
+                $dataRatings = [
+                    'products_id' => $productsId,
+                    'professionals_id' => $data->professionals_id,
+                    'description' => $data->description,
+                    'ratings' => $data->ratings,
+                    'show' => $data->show ?? 0,
+                ];
+                ProfessionalRatings::updateOrCreate(['professionals_id' => $data->professionals_id, 'products_id' => $productsId], $dataRatings);
+            }
         }
+
     }
     private function setTags($request, $result)
     {
@@ -344,6 +354,32 @@ class ProductsController extends WebController
         }
     }
 
+    private function setOptionals($request, $result)
+    {
+        $name = $request->get('optionals_name');
+        $description = $request->get('optionals_description');
+        $video_id = $request->get('optionals_video');
+        $images = $request->file('optionals_images');
+        $banner = $request->file('optionals_banner');
+        if ($name && $name != 'undefined') {
+            $data = [
+                'name' => $name,
+                'description' => $description,
+                'video_id' => $video_id,
+                'products_id' => $result->id,
+            ];
+            $data['slug'] = $this->getSlug($data);
+            $optional = ProductOptional::updateOrCreate(['products_id' => $result->id], $data);
+            if ($request->hasFile('optionals_images')) {
+                $this->setMedia($images, $optional->id, 'product_optionals');
+            }
+            if ($request->hasFile('optionals_banner')) {
+                $this->setMedia($banner, $optional->id, 'product_optionals', 2);
+            }
+        }
+
+    }
+
     /**
      * Display the specified resource.
      *
@@ -368,7 +404,7 @@ class ProductsController extends WebController
                 ->select($select)
                 ->orderBy('updated_at', 'desc')
                 ->with($with)
-                ->take(15)->get();
+                ->take(3)->get();
             //get vintages products
             $vintagesId = VintagesProductIndex::where(['products_id' => $id])->pluck('vintages_id');
             $vintages = CurrentModel::whereIn('id', function ($query) use ($vintagesId) {
@@ -378,7 +414,7 @@ class ProductsController extends WebController
                 ->orderBy('order_by', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->with($with)
-                ->take(15)->get();
+                ->take(3)->get();
 
             //get regions product
             $regions = CurrentModel::where(['is_active' => 1, 'regions_id' => $result->regions_id])
@@ -386,7 +422,7 @@ class ProductsController extends WebController
                 ->select($select)
                 ->orderBy('order_by', 'asc')
                 ->orderBy('created_at', 'desc')
-                ->with($with)->take(15)->get();
+                ->with($with)->take(3)->get();
 
             //get list other product
             $listCategoryIds = CategoryProductsIndex::where(['products_id' => $id])->pluck('categories_id');
@@ -428,10 +464,19 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating', 'vintages'])->find($id);
+            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating', 'vintages', 'productOptional'])->find($id);
             $this->formData = \array_merge($this->formData, $this->mergFields);
             $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
             $result->vintages_id = $result->vintages->pluck('vintages_id')->toArray();
+            // set optional to product
+            $optional = $result->productOptional;
+            if ($optional) {
+                $result->optionals_name = $optional->name ?? '';
+                $result->optionals_description = $optional->description ?? '';
+                $result->optionals_video = $optional->video_id ?? '';
+                $result->optionals_images = $optional->images()->where(['group_id' => 1])->get();
+                $result->optionals_banner = $optional->images()->where(['group_id' => 2])->get();
+            }
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
@@ -459,7 +504,7 @@ class ProductsController extends WebController
         }
         $validator = Validator($request->all(), $this->rules($id), $this->message());
         if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            return $this->responseError($validator->errors());
         }
         try {
             $data = [];
@@ -478,6 +523,7 @@ class ProductsController extends WebController
             $this->setProfessionalRating($request, $result);
             $this->setTags($request, $result);
             $this->setVintagesProductsIndex($request, $result);
+            $this->setOptionals($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -487,7 +533,7 @@ class ProductsController extends WebController
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e->getMessage());
+            return $this->responseError([$e->getMessage()]);
         }
     }
 
@@ -510,7 +556,7 @@ class ProductsController extends WebController
     public function getComment($productId)
     {
         try {
-            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0])->with(['children'])->orderBy('id', 'desc')->paginate();
+            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0, 'status' => 1])->with(['children'])->orderBy('id', 'desc')->paginate();
             return $this->responseViewSuccess(['comment' => $comment]);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
@@ -543,7 +589,7 @@ class ProductsController extends WebController
                 'name' => $user->name,
             ];
             ProductComments::create($data);
-            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0])->with(['children'])->orderBy('id', 'desc')->paginate();
+            $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0, 'status' => 1])->with(['children'])->orderBy('id', 'desc')->paginate();
             return $this->responseViewSuccess(['comment' => $comment], ['Câu hỏi của bạn đã được gửi cho chúng tôi']);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
@@ -566,11 +612,11 @@ class ProductsController extends WebController
     {
         try {
             $ads = Blocks::where(['is_active' => 1])->with(['images'])->take(9)->offset(2)->get();
-            $tags = Tags::take(4)->getQuery();
+            $tags = Tags::take(4)->with(['productTags']);
             $tagIds = $tags->pluck('id')->toArray();
             $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {
                 $query->from(with(new ProductTags())->getTable())->select(['products_id'])->whereIn('tags_id', $tagIds)->pluck('products_id');
-            })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags'])->paginate();
+            })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags'])->orderBy('updated_at', 'desc')->get();
             $result = [
                 'ads' => $ads,
                 'result' => $products,

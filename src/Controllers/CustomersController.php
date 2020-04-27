@@ -230,7 +230,7 @@ class CustomersController extends WebController
                 session()->put('user', $user);
             }
 
-            return $isApi ? $this->responseViewSuccess(['user' => $user]) : $this->responseSuccess($response);
+            return $isApi ? $this->responseViewSuccess(['user' => $user], [trans('nksoft::message.Success')]) : $this->responseSuccess($response);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }
