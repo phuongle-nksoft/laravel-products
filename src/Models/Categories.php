@@ -40,6 +40,7 @@ class Categories extends NksoftModel
                     'state' => $selected,
                     'children' => self::GetListCategories(['parent_id' => $item->id], $result),
                     'slug' => $item->slug,
+                    'checked' => $item->id === $parentId ? true : false,
                 );
             }
         }
@@ -66,6 +67,7 @@ class Categories extends NksoftModel
                     'state' => $selected,
                     'children' => self::GetListByProduct(['parent_id' => $item->id], $idSelected),
                     'slug' => $item->slug,
+                    'checked' => in_array($item->id, $idSelected) ? true : false,
                 );
             }
         }

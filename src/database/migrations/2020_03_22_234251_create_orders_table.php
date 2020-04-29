@@ -23,6 +23,7 @@ class CreateOrdersTable extends Migration
             $table->decimal('total', 12, 2)->nullable();
             $table->integer('status')->nullable()->default(0);
             $table->string('order_id');
+            $table->longText('note')->nullable();
             $table->boolean('price_contact')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();

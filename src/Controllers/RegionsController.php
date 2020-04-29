@@ -179,13 +179,15 @@ class RegionsController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'slug'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             $listIds = CurrentModel::GetListIds(['id' => $id]);
             if (!$result) {
                 return $this->responseError('404');
             }
             $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $image = $result->images()->first();
+            $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -196,6 +198,14 @@ class RegionsController extends WebController
                     ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
+                'seo' => [
+                    'title' => $result->name,
+                    'ogDescription' => $result->meta_description,
+                    'ogUrl' => url($result->slug),
+                    'ogImage' => url($im),
+                    'ogSiteName' => $result->name,
+                ],
+                'url' => $this->module . '/' . $result->id,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

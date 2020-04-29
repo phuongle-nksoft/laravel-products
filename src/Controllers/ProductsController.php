@@ -6,6 +6,7 @@ use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Articles\Models\Blocks;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Master\Models\Settings;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
@@ -137,9 +138,9 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
-                    ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'tree'],
+                    ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
@@ -617,10 +618,20 @@ class ProductsController extends WebController
             $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {
                 $query->from(with(new ProductTags())->getTable())->select(['products_id'])->whereIn('tags_id', $tagIds)->pluck('products_id');
             })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags'])->orderBy('updated_at', 'desc')->get();
+            $setting = Settings::first();
+            $settingImage = $setting->images()->first();
+            $img = $settingImage ? url('storage/' . $settingImage->image) : url('wine/images/share/logo.svg');
             $result = [
                 'ads' => $ads,
                 'result' => $products,
                 'tags' => $tags->get(),
+                'seo' => [
+                    'title' => $setting->title,
+                    'ogDescription' => $setting->description,
+                    'ogUrl' => url('/'),
+                    'ogImage' => $img,
+                    'ogSiteName' => $setting->title,
+                ],
             ];
             return $this->responseViewSuccess($result);
         } catch (\Exception $e) {

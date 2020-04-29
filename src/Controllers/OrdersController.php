@@ -3,13 +3,20 @@
 namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\Orders as CurrentModel;
 use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\Promotions;
 use Validator;
 
 class OrdersController extends WebController
 {
+    private $formData = CurrentModel::FIELDS;
+
+    protected $module = 'orders';
+
+    protected $model = CurrentModel::class;
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +24,28 @@ class OrdersController extends WebController
      */
     public function index()
     {
-        //
+        try {
+            $columns = [
+                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'order_id', 'label' => trans('nksoft::products.Order Id')],
+                ['key' => 'customers_id', 'label' => trans('nksoft::common.customers')],
+                ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings')],
+                ['key' => 'total', 'label' => trans('nksoft::products.Total')],
+                ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus')],
+            ];
+            $select = Arr::pluck($columns, 'key');
+            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $listDelete = $this->getHistories($this->module)->pluck('parent_id');
+            $response = [
+                'rows' => $results,
+                'columns' => $columns,
+                'module' => $this->module,
+                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+            ];
+            return $this->responseSuccess($response);
+        } catch (\Execption $e) {
+            return $this->responseError($e);
+        }
     }
 
     /**
@@ -27,7 +55,86 @@ class OrdersController extends WebController
      */
     public function create()
     {
-        //
+        try {
+            $response = [
+                'formElement' => $this->formElement(),
+                'result' => null,
+                'formData' => $this->formData,
+                'module' => $this->module,
+            ];
+            return $this->responseSuccess($response);
+        } catch (\Execption $e) {
+            return $this->responseError($e);
+        }
+    }
+
+    private function formElement($result = null)
+    {
+        return [
+            [
+                'key' => 'general',
+                'label' => trans('nksoft::common.General'),
+                'element' => [
+                    ['key' => 'promotions', 'label' => trans('nksoft::common.promotions'), 'data' => null, 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'readonly' => true, 'type' => 'number'],
+                    ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'data' => null, 'readonly' => true, 'type' => 'number'],
+                    ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
+                    ['key' => 'note', 'label' => trans('nksoft::products.Note'), 'data' => null, 'type' => 'textarea'],
+                ],
+                'active' => true,
+            ],
+            [
+                'key' => 'customers',
+                'label' => trans('nksoft::common.customers'),
+                'element' => [
+                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'customer_phone', 'label' => trans('nksoft::common.Phone'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'customer_email', 'label' => trans('nksoft::common.Email'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                ],
+            ],
+            [
+                'key' => 'shippings',
+                'label' => trans('nksoft::common.shippings'),
+                'element' => [
+                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_phone', 'label' => trans('nksoft::common.Phone'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_address', 'label' => trans('nksoft::settings.Address'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_company', 'label' => trans('nksoft::common.Company'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_provinces', 'label' => trans('nksoft::products.Province'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_districts', 'label' => trans('nksoft::products.District'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_wards', 'label' => trans('nksoft::products.Wards'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                ],
+            ],
+            [
+                'key' => 'orderDetail',
+                'label' => trans('nksoft::products.Order Detail'),
+                'element' => [
+                    ['key' => 'order_detail_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'order_detail_discount', 'label' => trans('nksoft::products.Discount'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'order_detail_special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'order_detail_price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'order_detail_qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'order_detail_subtotal', 'label' => trans('nksoft::products.Subtotal'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                ],
+            ],
+        ];
+    }
+
+    private function rules()
+    {
+        $rules = [
+            'name' => 'required',
+            'images[]' => 'file',
+        ];
+
+        return $rules;
+    }
+
+    private function message()
+    {
+        return [
+            'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
+        ];
     }
 
     /**
@@ -38,7 +145,7 @@ class OrdersController extends WebController
      */
     public function store(Request $request)
     {
-        //
+
     }
 
     /**
@@ -60,7 +167,18 @@ class OrdersController extends WebController
      */
     public function edit($id)
     {
-        //
+        try {
+            $result = CurrentModel::where(['id' => $id])->with(['shipping', 'orderDetails', 'promotion'])->get();
+            $response = [
+                'formElement' => $this->formElement($result),
+                'result' => $result,
+                'formData' => $this->formData,
+                'module' => $this->module,
+            ];
+            return $this->responseSuccess($response);
+        } catch (\Execption $e) {
+            return $this->responseError($e);
+        }
     }
 
     /**
@@ -72,18 +190,42 @@ class OrdersController extends WebController
      */
     public function update(Request $request, $id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        $result = CurrentModel::find($id);
+        if ($result == null) {
+            return $this->responseError();
+        }
+        $validator = Validator($request->all(), $this->rules($id), $this->message());
+        if ($validator->fails()) {
+            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+        }
+        try {
+            $data = [];
+            foreach ($this->formData as $item) {
+                if (!\in_array($item, $this->excludeCol)) {
+                    $data[$item] = $request->get($item);
+                }
+            }
+            foreach ($data as $k => $v) {
+                $result->$k = $v;
+            }
+            $data['slug'] = $this->getSlug($data);
+            $result->save();
+            $this->setUrlRedirects($result);
+            if ($request->hasFile('images')) {
+                $images = $request->file('images');
+                $this->setMedia($images, $result->id, $this->module);
+            }
+            if ($request->hasFile('banner')) {
+                $images = $request->file('banner');
+                $this->setMedia($images, $result->id, $this->module, 2);
+            }
+            $response = [
+                'result' => $result,
+            ];
+            return $this->responseSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e);
+        }
     }
 
     public function addCart(Request $request)

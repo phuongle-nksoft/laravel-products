@@ -70,6 +70,7 @@ class Vintages extends NksoftModel
                     'state' => $selected,
                     'children' => self::GetListByProduct(['parent_id' => $item->id], $idSelected),
                     'slug' => $item->slug,
+                    'checked' => in_array($item->id, $idSelected) ? true : false,
                 );
             }
         }

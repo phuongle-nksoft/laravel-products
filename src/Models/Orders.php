@@ -23,4 +23,9 @@ class Orders extends NksoftModel
     {
         return $this->belongsTo(Shipping::class, 'shippings_id')->with(['customer', 'provinces', 'districts', 'wards']);
     }
+
+    public function promotion()
+    {
+        return $this->belongsTo(Promotions::class, 'promotions_id');
+    }
 }

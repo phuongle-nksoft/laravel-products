@@ -1,6 +1,5 @@
 <?php
 return [
-    'Discount Amount' => 'Giá Trị',
     'Coupon Type' => 'Áp Dụng Toolbar',
     'Code' => 'Mã Giảm Giá',
     'Simple Action' => 'Loại Giảm Giá',
@@ -21,4 +20,9 @@ return [
     'Province' => 'Tỉnh - Thành Phố',
     'District' => 'Quận - Huyện',
     'Wards' => 'Phường - Xã',
+    'Order Id' => 'Mã Đơn Hàng',
+    'Total' => 'Tổng',
+    'Note' => 'Ghi Chú',
+    'Order Detail' => 'Chi Tiết Đơn Hàng',
+    'Subtotal' => 'Tạm Tính',
 ];
