@@ -11,6 +11,6 @@ class Provinces extends NksoftModel
 
     public function districts()
     {
-        return $this->hasMany(Districts::class, 'provinces_id')->select(Districts::FIELDS)->with(['wards']);
+        return $this->hasMany(Districts::class, 'provinces_id')->orderBy('name', 'asc')->select(Districts::FIELDS)->with(['wards']);
     }
 }

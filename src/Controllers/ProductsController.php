@@ -47,7 +47,7 @@ class ProductsController extends WebController
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $results = CurrentModel::select($select)->with(['histories'])->orderBy('updated_at', 'desc')->paginate();
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,
@@ -89,6 +89,7 @@ class ProductsController extends WebController
         $brands = Brands::select(['id', 'name'])->get();
         $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
         $professional = Professionals::select(['id', 'name'])->get();
+
         $custom = [
             [
                 'label' => trans('nksoft::common.professionals'),
@@ -115,16 +116,16 @@ class ProductsController extends WebController
             ],
         ];
         $volume = [
-            ['id' => 750, 'name' => '750ML'],
-            ['id' => 1000, 'name' => '1L'],
-            ['id' => 1500, 'name' => '1.5L'],
-            ['id' => 3000, 'name' => '3L'],
-            ['id' => 6000, 'name' => '6L'],
+            ['id' => 750, 'name' => '750ML', 'selected' => $result ? $result->volume == 750 : false],
+            ['id' => 1000, 'name' => '1L', 'selected' => $result ? $result->volume == 1000 : false],
+            ['id' => 1500, 'name' => '1.5L', 'selected' => $result ? $result->volume == 1500 : false],
+            ['id' => 3000, 'name' => '3L', 'selected' => $result ? $result->volume == 3000 : false],
+            ['id' => 6000, 'name' => '6L', 'selected' => $result ? $result->volume == 6000 : false],
         ];
         $date = [];
         for ($i = 0; $i < 200; $i++) {
             $v = date('Y') - $i;
-            $date[] = ['id' => $v, 'name' => $v];
+            $date[] = ['id' => $v, 'name' => $v, 'selected' => $result ? $result->year_of_manufacture == $v : false];
         }
         $tagIds = [];
         if ($result) {
@@ -139,7 +140,8 @@ class ProductsController extends WebController
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                     ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'select'],
-                    ['key' => 'vintages_id', 'label' => trans('nksoft::common.vintages'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
+                    ['key' => 'vintages_banner_id', 'label' => trans('nksoft::products.Vintages Content'), 'data' => $vintages, 'class' => 'required', 'type' => 'select'],
+                    ['key' => 'vintages_id', 'label' => trans('nksoft::products.Vintages Title'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
@@ -196,6 +198,7 @@ class ProductsController extends WebController
             'name' => 'required',
             'categories_id' => 'required',
             'vintages_id' => 'required',
+            'vintages_banner_id' => 'required',
             'regions_id' => 'required',
             'brands_id' => 'required',
             'qty' => 'required',
@@ -210,7 +213,8 @@ class ProductsController extends WebController
         return [
             'name.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Name')]),
             'categories_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.categories')]),
-            'vintages_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.vintages')]),
+            'vintages_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Vintages Title')]),
+            'vintages_banner_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Vintages Content')]),
             'regions_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.regions')]),
             'brands_id.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.brands')]),
             'sku.required' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Sku')]),
@@ -391,7 +395,7 @@ class ProductsController extends WebController
     {
         try {
             $select = CurrentModel::FIELDS;
-            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'];
+            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)
                 ->with($with)->first();

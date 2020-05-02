@@ -38,7 +38,7 @@ class Vintages extends NksoftModel
                     'selected' => $item->id === $parentId ? true : false,
                 );
                 $data[] = array(
-                    'text' => $item->name,
+                    'name' => $item->name,
                     'icon' => 'fas fa-folder',
                     'id' => $item->id,
                     'state' => $selected,
@@ -64,13 +64,13 @@ class Vintages extends NksoftModel
                     'selected' => in_array($item->id, $idSelected) ? true : false,
                 );
                 $data[] = array(
-                    'text' => $item->name,
+                    'name' => $item->name,
                     'icon' => 'fas fa-folder',
                     'id' => $item->id,
                     'state' => $selected,
                     'children' => self::GetListByProduct(['parent_id' => $item->id], $idSelected),
                     'slug' => $item->slug,
-                    'checked' => in_array($item->id, $idSelected) ? true : false,
+                    'selected' => in_array($item->id, $idSelected) ? true : false,
                 );
             }
         }

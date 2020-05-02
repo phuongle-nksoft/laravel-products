@@ -25,4 +25,6 @@ return [
     'Note' => 'Ghi Chú',
     'Order Detail' => 'Chi Tiết Đơn Hàng',
     'Subtotal' => 'Tạm Tính',
+    'Vintages Title' => 'Giống Nho Tiêu Đề',
+    'Vintages Content' => 'Giống Nho Nội Dung',
 ];

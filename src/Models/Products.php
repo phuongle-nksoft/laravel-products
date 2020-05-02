@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Products extends NksoftModel
 {
-    const FIELDS = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'qty', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description', 'views', 'price_contact'];
+    const FIELDS = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'vintages_banner_id', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'qty', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description', 'views', 'price_contact'];
     protected $table = 'products';
     protected $fillable = self::FIELDS;
 
@@ -23,6 +23,11 @@ class Products extends NksoftModel
     public function vintages()
     {
         return $this->hasMany(VintagesProductIndex::class, 'products_id')->with(['vintages']);
+    }
+
+    public function vintageBanner()
+    {
+        return $this->belongsTo(Vintages::class, 'vintages_banner_id')->with(['images']);
     }
 
     public function brands()

@@ -70,7 +70,7 @@ class VintagesController extends WebController
     {
         $categories = [
             [
-                'text' => trans('nksoft::common.vintages'),
+                'name' => trans('nksoft::common.vintages'),
                 'id' => 0,
                 'icon' => 'fas fa-folder',
                 'state' => [
@@ -86,7 +86,7 @@ class VintagesController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'parent_id', 'label' => trans('nksoft::common.vintages'), 'data' => $categories, 'type' => 'tree'],
+                    ['key' => 'parent_id', 'label' => trans('nksoft::common.vintages'), 'data' => $categories, 'type' => 'select'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,

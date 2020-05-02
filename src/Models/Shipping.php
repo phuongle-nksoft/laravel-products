@@ -16,14 +16,14 @@ class Shipping extends NksoftModel
 
     public function provinces()
     {
-        return $this->belongsTo(Provinces::class, 'provinces_id');
+        return $this->belongsTo(Provinces::class, 'provinces_id')->orderBy('order_by', 'asc')->orderBy('name', 'asc');
     }
     public function districts()
     {
-        return $this->belongsTo(Districts::class, 'districts_id');
+        return $this->belongsTo(Districts::class, 'districts_id')->orderBy('name', 'asc');
     }
     public function wards()
     {
-        return $this->belongsTo(Wards::class, 'wards_id');
+        return $this->belongsTo(Wards::class, 'wards_id')->orderBy('name', 'asc');
     }
 }

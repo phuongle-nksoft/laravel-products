@@ -176,7 +176,7 @@ class ShippingsController extends WebController
     {
 
         try {
-            $provinces = Provinces::with(['districts'])->get();
+            $provinces = Provinces::with(['districts'])->orderBy('order_by', 'asc')->orderBy('name', 'asc')->get();
             $response = [
                 'provinces' => $provinces,
             ];
