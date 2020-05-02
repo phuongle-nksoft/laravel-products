@@ -264,6 +264,7 @@ class CustomersController extends WebController
 
     public function loginSerices($service)
     {
+        session(['urlLogin' => request()->headers->get('referer')]);
         return Socialite::driver($service)->redirect();
     }
     public function callback($service)
@@ -281,7 +282,7 @@ class CustomersController extends WebController
             ]);
         }
         session()->put('user', $customer);
-        return redirect()->to('/');
+        return redirect()->to(session('urlLogin'));
     }
 
     public function myWine($customerId)

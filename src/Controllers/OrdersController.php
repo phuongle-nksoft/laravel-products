@@ -314,20 +314,28 @@ class OrdersController extends WebController
         return $this->responseViewSuccess(['discount' => $promotion, 'cart' => $cart], ['Mã code đã được áp dụng.']);
     }
 
-    private function calcDiscount($cart, $promotion)
+    public function deleteCode()
     {
-        $productIds = json_decode($promotion->product_ids);
-        if (!$productIds) {
-            $productIds = [];
+        session()->forget('discount');
+        $cart = $this->calcDiscount(session(config('nksoft.addCart')));
+        session([config('nksoft.addCart') => $cart]);
+        return $this->responseViewSuccess(['discount' => null, 'cart' => $cart], ['Mã đã xóa mã giảm giá.']);
+    }
+
+    private function calcDiscount($cart, $promotion = null)
+    {
+        $productIds = [];
+        if ($promotion) {
+            $productIds = json_decode($promotion->product_ids) ?? [];
         }
         if ($cart) {
             foreach ($cart as $key => $item) {
                 $price = $item['special_price'] ?? $item['price'];
                 $discount = 0;
-                if (count($productIds) > 0 && in_array($item['product_id'], $productIds)) {
+                if (!is_null($promotion) && count($productIds) > 0 && in_array($item['product_id'], $productIds)) {
                     $discount = $promotion->simple_action == 1 ? ($promotion->discount_amount / 100) * $price : $promotion->discount_amount;
                 }
-                if ($promotion->all_products) {
+                if ($promotion && $promotion->all_products) {
                     $discount = $promotion->simple_action == 1 ? ($promotion->discount_amount / 100) * $price : $promotion->discount_amount;
                 }
                 $cart[$key]['discount'] = $discount * $item['qty'];

@@ -25,6 +25,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('get-cart', 'OrdersController@getCart')->name('get-cart');
         Route::delete('delete-cart/{rowId}', 'OrdersController@deteleCart')->name('delete-cart');
         Route::post('discount', 'OrdersController@discount');
+        Route::post('deleteCode', 'OrdersController@deleteCode');
         Route::get('myHistory/{customerId}', 'CustomersController@histories');
         Route::get('login/{service}/callback', 'CustomersController@callback');
         Route::get('login/{service}', 'CustomersController@loginSerices');
