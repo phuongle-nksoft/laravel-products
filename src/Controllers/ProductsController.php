@@ -10,6 +10,7 @@ use Nksoft\Master\Models\Settings;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
+use Nksoft\Products\Models\Customers;
 use Nksoft\Products\Models\ProductComments;
 use Nksoft\Products\Models\ProductOptional;
 use Nksoft\Products\Models\Products as CurrentModel;
@@ -122,7 +123,9 @@ class ProductsController extends WebController
             ['id' => 3000, 'name' => '3L', 'selected' => $result ? $result->volume == 3000 : false],
             ['id' => 6000, 'name' => '6L', 'selected' => $result ? $result->volume == 6000 : false],
         ];
-        $date = [];
+        $date = [
+            ['id' => 0, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
+        ];
         for ($i = 0; $i < 200; $i++) {
             $v = date('Y') - $i;
             $date[] = ['id' => $v, 'name' => $v, 'selected' => $result ? $result->year_of_manufacture == $v : false];
@@ -160,10 +163,9 @@ class ProductsController extends WebController
                     ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
-                    ['key' => 'smell', 'label' => trans('nksoft::common.Smell'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
+                    ['key' => 'smell', 'label' => trans('nksoft::products.Product Detail'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
                     ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $date, 'class' => 'col-12 col-lg-4', 'type' => 'select'],
-                    ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'tags', 'label' => trans('nksoft::common.tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
@@ -551,8 +553,10 @@ class ProductsController extends WebController
                 return $this->responseError($validator->errors());
             }
             $productId = $request->get('products_id');
-            $wishlist = Wishlists::updateOrCreate(['customers_id' => $user->id, 'products_id' => $productId], ['customers_id' => $user->id, 'products_id' => $productId]);
-            return $this->responseViewSuccess(['wishlist' => $wishlist], ['Sản phẩm đã được thêm vào danh sách rượu của bạn']);
+            Wishlists::updateOrCreate(['customers_id' => $user->id, 'products_id' => $productId], ['customers_id' => $user->id, 'products_id' => $productId]);
+            $customer = Customers::where(['id' => $user->id])->with(['shipping', 'wishlists', 'orders'])->first();
+            session(['user' => $customer]);
+            return $this->responseViewSuccess(['user' => $customer], ['Sản phẩm đã được thêm vào danh sách rượu của bạn']);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }
@@ -640,6 +644,29 @@ class ProductsController extends WebController
             return $this->responseViewSuccess($result);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function getSearch()
+    {
+        $q = request()->get('q');
+        try {
+            $products = CurrentModel::where(['is_active' => 1])->where('name', 'like', '%' . $q . '%')
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $response = [
+                'result' => null,
+                'products' => $products->paginate(),
+                'total' => $products->count(),
+                'banner' => null,
+                'template' => 'products',
+                'breadcrumb' => [
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $q],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
         }
     }
 

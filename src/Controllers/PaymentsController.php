@@ -145,7 +145,7 @@ class PaymentsController extends WebController
                 $this->resetSession($order);
                 $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
                 session(['order' => $order]);
-                return $this->responseViewSuccess(['url' => url('success')]);
+                return $this->responseViewSuccess(['url' => url('dat-hang-thanh-cong')]);
             }
         } else {
             $dataDetails = [];
@@ -267,7 +267,7 @@ class PaymentsController extends WebController
             $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
             session(['order' => $order]);
             $this->resetSession($order);
-            return redirect('success');
+            return redirect('dat-hang-thanh-cong');
         } else {
             return redirect('fails');
         }
