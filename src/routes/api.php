@@ -2,6 +2,11 @@
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'api/admin', 'middleware' => 'web', 'namespace' => 'Nksoft\Products\Controllers'], function () {
+    Route::get('categories/search', 'CategoriesController@index');
+    Route::get('products/search', 'ProductsController@index');
+    Route::get('vintages/search', 'VintagesController@index');
+    Route::get('brands/search', 'BrandsController@index');
+    Route::get('regions/search', 'RegionsController@index');
     Route::resources([
         '/' => CategoriesController::class,
         'categories' => CategoriesController::class,

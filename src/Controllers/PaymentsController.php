@@ -114,6 +114,7 @@ class PaymentsController extends WebController
         if ($promotion) {
             $total = $total - $discount;
         }
+        $provinceId = $request->get('provinces_id');
         $orderData = [
             'shippings_id' => $request->get('shippings_id'),
             'customers_id' => $user->id,
@@ -125,7 +126,7 @@ class PaymentsController extends WebController
             'order_id' => bin2hex(random_bytes(4)),
             'price_contact' => $price_contact ? 1 : 0,
         ];
-        if ($price_contact) {
+        if ($price_contact || !in_array($provinceId, [1, 50, 32])) {
             $order = Orders::create($orderData);
             if ($order) {
                 $dataDetails = [];

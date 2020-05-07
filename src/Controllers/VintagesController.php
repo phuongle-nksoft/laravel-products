@@ -30,13 +30,19 @@ class VintagesController extends WebController
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $q = request()->get('q');
+            if ($q) {
+                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
+            } else {
+                $results = CurrentModel::select($select)->with(['histories'])->orderBy('updated_at', 'desc')->paginate();
+            }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+                'showSearch' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
