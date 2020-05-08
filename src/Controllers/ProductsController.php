@@ -403,7 +403,7 @@ class ProductsController extends WebController
     {
         try {
             $select = CurrentModel::FIELDS;
-            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner'];
+            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner', 'productOptional'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)
                 ->with($with)->first();
