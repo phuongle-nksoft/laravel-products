@@ -93,12 +93,14 @@ class CustomersController extends WebController
     private function rules($id = 0)
     {
         $rules = [
-            'email' => 'email',
+            'email' => 'required|email',
             'images[]' => 'file',
         ];
         if ($id == 0) {
             $rules['email'] = 'email | unique:customers';
             $rules['password'] = 'required|min:6';
+            $rules['phone'] = 'required';
+            $rules['name'] = 'required';
         }
 
         return $rules;
@@ -259,7 +261,7 @@ class CustomersController extends WebController
     public function logout()
     {
         session()->forget('user');
-        return redirect()->to('/');
+        return $this->responseViewSuccess();
     }
 
     public function loginSerices($service)
@@ -285,9 +287,18 @@ class CustomersController extends WebController
         return redirect()->to(session('urlLogin'));
     }
 
-    public function myWine($customerId)
+    /**
+     * Get list my wine
+     */
+    public function myWine()
     {
         try {
+            $user = session('user');
+            if (!$user) {
+                return $this->responseError(['404']);
+            }
+
+            $customerId = $user->id;
             $customer = CurrentModel::find($customerId);
             if (!$customer) {
                 return $this->responseError('404');
@@ -306,9 +317,18 @@ class CustomersController extends WebController
         }
     }
 
-    public function histories($customerId)
+    /**
+     * Get list histories user buy products
+     */
+    public function histories()
     {
         try {
+            $user = session('user');
+            if (!$user) {
+                return $this->responseError(['404']);
+            }
+
+            $customerId = $user->id;
             $customer = CurrentModel::find($customerId);
             if (!$customer) {
                 return $this->responseError('404');
@@ -318,5 +338,14 @@ class CustomersController extends WebController
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }
+    }
+
+    public function getUser()
+    {
+        $user = session('user');
+        if (!$user) {
+            return $this->responseError(['404']);
+        }
+        return $this->responseViewSuccess(['user' => $user]);
     }
 }

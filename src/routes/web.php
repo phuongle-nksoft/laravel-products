@@ -25,14 +25,16 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('get-cart', 'OrdersController@getCart')->name('get-cart');
         Route::delete('delete-cart/{rowId}', 'OrdersController@deteleCart')->name('delete-cart');
         Route::post('discount', 'OrdersController@discount');
+        Route::get('getDiscount', 'OrdersController@getDiscount');
         Route::post('deleteCode', 'OrdersController@deleteCode');
-        Route::get('myHistory/{customerId}', 'CustomersController@histories');
+        Route::get('myHistory', 'CustomersController@histories');
+        Route::get('getUser', 'CustomersController@getUser');
         Route::get('login/{service}/callback', 'CustomersController@callback');
         Route::get('login/{service}', 'CustomersController@loginSerices');
         Route::post('customers/login', 'CustomersController@login');
         Route::post('customers/register', 'CustomersController@store');
         Route::get('logout', 'CustomersController@logout');
-        Route::get('myWine/{customerId}', 'CustomersController@myWine');
+        Route::get('myWine', 'CustomersController@myWine');
         Route::post('shippings', 'ShippingsController@store');
         Route::put('shippings/{id}', 'ShippingsController@update');
         Route::delete('shippings/{id}', 'ShippingsController@destroy');

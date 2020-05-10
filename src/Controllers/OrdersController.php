@@ -228,6 +228,9 @@ class OrdersController extends WebController
         }
     }
 
+    /**
+     * add item to cart
+     */
     public function addCart(Request $request)
     {
         $validator = Validator::make($request->all(), ['qty' => 'required', 'productId' => 'required']);
@@ -286,12 +289,18 @@ class OrdersController extends WebController
         return $this->responseViewSuccess($allCarts);
     }
 
+    /**
+     * get list item cart
+     */
     public function getCart()
     {
         $allCarts = request()->session()->get(config('nksoft.addCart')) ?? [];
         return $this->responseViewSuccess($allCarts);
     }
 
+    /**
+     * delete item in cart
+     */
     public function deteleCart($rowId)
     {
         $allCarts = request()->session()->get(config('nksoft.addCart')) ?? [];
@@ -300,6 +309,9 @@ class OrdersController extends WebController
         return $this->responseViewSuccess($allCarts);
     }
 
+    /**
+     * use discount promotion
+     */
     public function discount(Request $request)
     {
         $code = $request->get('code');
@@ -314,6 +326,9 @@ class OrdersController extends WebController
         return $this->responseViewSuccess(['discount' => $promotion, 'cart' => $cart], ['Mã code đã được áp dụng.']);
     }
 
+    /**
+     * delete promotion
+     */
     public function deleteCode()
     {
         session()->forget('discount');
@@ -322,6 +337,9 @@ class OrdersController extends WebController
         return $this->responseViewSuccess(['discount' => null, 'cart' => $cart], ['Mã đã xóa mã giảm giá.']);
     }
 
+    /**
+     * calculate discount
+     */
     private function calcDiscount($cart, $promotion = null)
     {
         $productIds = [];
@@ -342,5 +360,21 @@ class OrdersController extends WebController
             }
         }
         return $cart;
+    }
+
+    /**
+     * get discount
+     */
+    public function getDiscount()
+    {
+        try {
+            $response = array(
+                'listDiscount' => Promotions::where(['is_active' => 1, 'coupon_type' => 1])->whereRaw('(expice_date > ? or expice_date is null)', date('Y-m-d'))->get(),
+                'discountUsed' => session('discount'),
+            );
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
     }
 }

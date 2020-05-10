@@ -64,6 +64,10 @@ class ShippingsController extends WebController
      */
     public function store(Request $request)
     {
+        $user = session('user');
+        if (!$user) {
+            return $this->responseError(['404']);
+        }
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
             return $this->responseError($validator->errors());
@@ -75,6 +79,7 @@ class ShippingsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            $data['customers_id'] = $user->id;
             if ($data['is_default']) {
                 CurrentModel::where(['customers_id' => $data['customers_id']])->update(['is_default' => 0, 'last_shipping' => 0]);
             }
@@ -122,6 +127,11 @@ class ShippingsController extends WebController
      */
     public function update(Request $request, $id)
     {
+        $user = session('user');
+        if (!$user) {
+            return $this->responseError(['404']);
+        }
+
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
             return $this->responseError($validator->errors());
@@ -133,11 +143,12 @@ class ShippingsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            $customerId = $user->id;
             if ($data['is_default']) {
-                CurrentModel::where(['customers_id' => $data['customers_id']])->update(['is_default' => 0, 'last_shipping' => 0]);
+                CurrentModel::where(['customers_id' => $customerId])->update(['is_default' => 0, 'last_shipping' => 0]);
             }
             $shipping = CurrentModel::updateOrCreate(['id' => $id], $data);
-            $customer = Customers::where(['id' => $data['customers_id']])->with('shipping')->first();
+            $customer = Customers::where(['id' => $customerId])->with('shipping')->first();
             session()->put('user', $customer);
             $response = [
                 'user' => $customer,
