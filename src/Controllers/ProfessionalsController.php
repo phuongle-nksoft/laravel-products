@@ -23,7 +23,7 @@ class ProfessionalsController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'short_name', 'label' => trans('nksoft::common.Short Name')],
             ];

@@ -26,16 +26,17 @@ class OrdersController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'order_id', 'label' => trans('nksoft::products.Order Id')],
-                ['key' => 'customers_id', 'label' => trans('nksoft::common.customers')],
-                ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings')],
+                ['key' => 'customers_id', 'label' => trans('nksoft::common.customers'), 'relationship' => 'customer'],
+                ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings'), 'relationship' => 'shipping'],
                 ['key' => 'total', 'label' => trans('nksoft::products.Total')],
-                ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus')],
+                ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $results = CurrentModel::select($select)->with(['histories', 'shipping', 'customer'])->paginate();
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
+
             $response = [
                 'rows' => $results,
                 'columns' => $columns,
@@ -75,7 +76,7 @@ class OrdersController extends WebController
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'promotions', 'label' => trans('nksoft::common.promotions'), 'data' => null, 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'promotions', 'label' => trans('nksoft::common.promotions'), 'data' => null, 'readonly' => true, 'type' => 'label'],
                     ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'readonly' => true, 'type' => 'number'],
                     ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'data' => null, 'readonly' => true, 'type' => 'number'],
                     ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
@@ -87,7 +88,7 @@ class OrdersController extends WebController
                 'key' => 'customers',
                 'label' => trans('nksoft::common.customers'),
                 'element' => [
-                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                     ['key' => 'customer_phone', 'label' => trans('nksoft::common.Phone'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
                     ['key' => 'customer_email', 'label' => trans('nksoft::common.Email'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
                 ],

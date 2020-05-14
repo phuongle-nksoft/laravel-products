@@ -28,4 +28,5 @@ return [
     'Vintages Title' => 'Giống Nho Tiêu Đề',
     'Vintages Content' => 'Giống Nho Nội Dung',
     'Product Detail' => 'Chi Tiết Sản Phẩm',
+    'Unit' => 'Đơn Vị Tính',
 ];

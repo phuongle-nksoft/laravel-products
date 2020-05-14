@@ -26,8 +26,9 @@ class CustomersController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
+                ['key' => 'phone', 'label' => trans('nksoft::common.Phone')],
                 ['key' => 'email', 'label' => trans('nksoft::users.Email')],
             ];
             $select = Arr::pluck($columns, 'key');
@@ -70,22 +71,16 @@ class CustomersController extends WebController
     {
         return [
             [
-                'key' => 'general',
-                'label' => trans('nksoft::common.General'),
-                'element' => [
-                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                ],
-                'active' => true,
-            ],
-            [
                 'key' => 'inputForm',
                 'label' => trans('nksoft::common.Content'),
                 'element' => [
+                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::users.Username'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'email', 'label' => trans('nksoft::users.Email'), 'data' => null, 'class' => 'required', 'type' => 'email'],
                     ['key' => 'password', 'label' => trans('nksoft::users.Password'), 'data' => null, 'class' => 'required', 'type' => 'password'],
                     ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'type' => 'image'],
                 ],
+                'active' => true,
             ],
         ];
     }
@@ -179,6 +174,7 @@ class CustomersController extends WebController
                 'result' => $result,
                 'formData' => $this->formData,
                 'module' => $this->module,
+                'disableDuplicate' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {

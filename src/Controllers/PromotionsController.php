@@ -24,10 +24,10 @@ class PromotionsController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount')],
-                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
+                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = collect($columns)->pluck('key')->toArray();
             $results = CurrentModel::select($select)->with(['histories'])->paginate();

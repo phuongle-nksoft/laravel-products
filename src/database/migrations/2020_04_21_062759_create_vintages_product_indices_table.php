@@ -20,7 +20,7 @@ class CreateVintagesProductIndicesTable extends Migration
             $table->boolean('is_active')->nullable()->default(0);
             $table->softDeletes();
             $table->timestamps();
-            $table->foreign('vintages_id', 'vintages_product_indices_vintages_id_foreign')->references('id')->on('categories')->onDelete('cascade');
+            $table->foreign('vintages_id', 'vintages_product_indices_vintages_id_foreign')->references('id')->on('vintages')->onDelete('cascade');
             $table->foreign('products_id', 'vintages_product_indices_products_id_foreign')->references('id')->on('products')->onDelete('cascade');
         });
     }

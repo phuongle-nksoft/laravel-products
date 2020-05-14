@@ -42,10 +42,11 @@ class ProductsController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'id', 'label' => 'Id'],
+                ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'price', 'label' => trans('nksoft::common.Price')],
-                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
+                ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture()],
+                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -89,6 +90,18 @@ class ProductsController extends WebController
         }
     }
 
+    private function getYearOfManufacture($result = null)
+    {
+        $date = [
+            ['id' => 0, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
+        ];
+        for ($i = 0; $i < 200; $i++) {
+            $v = date('Y') - $i;
+            $date[] = ['id' => $v, 'name' => $v, 'selected' => $result ? $result->year_of_manufacture == $v : false];
+        }
+        return $date;
+    }
+
     private function formElement($result = null)
     {
         $categories = Categories::GetListByProduct(array('parent_id' => 0), $result ? $result->categoryProductIndies->pluck('categories_id')->toArray() : [0]);
@@ -129,19 +142,17 @@ class ProductsController extends WebController
             ['id' => 3000, 'name' => '3L', 'selected' => $result ? $result->volume == 3000 : false],
             ['id' => 6000, 'name' => '6L', 'selected' => $result ? $result->volume == 6000 : false],
         ];
-        $date = [
-            ['id' => 0, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
-        ];
-        for ($i = 0; $i < 200; $i++) {
-            $v = date('Y') - $i;
-            $date[] = ['id' => $v, 'name' => $v, 'selected' => $result ? $result->year_of_manufacture == $v : false];
-        }
+
         $tagIds = [];
         if ($result) {
             $tagIds = $result->productTags()->pluck('tags_id')->toArray();
         }
 
         $tags = Tags::GetListByProduct($tagIds);
+        $units = [
+            ['id' => 1, 'name' => 'Chiếc'],
+            ['id' => 2, 'name' => 'Bộ'],
+        ];
         return [
             [
                 'key' => 'general',
@@ -166,12 +177,13 @@ class ProductsController extends WebController
                     ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'data' => null, 'type' => 'number'],
                     ['key' => 'price_contact', 'label' => trans('nksoft::common.Price Contact'), 'data' => null, 'type' => 'checkbox'],
                     ['key' => 'special_price', 'label' => trans('nksoft::common.Special Price'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'unit', 'label' => trans('nksoft::products.Unit'), 'data' => $units, 'type' => 'select'],
                     ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
                     ['key' => 'smell', 'label' => trans('nksoft::products.Product Detail'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
-                    ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $date, 'class' => 'col-12 col-lg-4', 'type' => 'select'],
+                    ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture($result), 'class' => 'col-12 col-lg-4', 'type' => 'select'],
                     ['key' => 'tags', 'label' => trans('nksoft::common.tags'), 'data' => $tags, 'type' => 'tree', 'multiple' => true],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
                     ['key' => 'slug', 'label' => trans('nksoft::common.Slug'), 'data' => null, 'type' => 'text'],
@@ -250,6 +262,10 @@ class ProductsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            if ($request->get('duplicate')) {
+                $data['slug'] = null;
+            }
+
             $data['slug'] = $this->getSlug($data);
             $result = CurrentModel::create($data);
             $this->setUrlRedirects($result);
