@@ -29,8 +29,8 @@ class ProductsController extends WebController
 
     protected $module = 'products';
 
-    protected $excFields = ['images', 'categories_id', 'id', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner'];
-    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner'];
+    protected $excFields = ['images', 'categories_id', 'id', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner', 'optionals_delete'];
+    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner', 'optionals_delete'];
 
     protected $model = CurrentModel::class;
     /**
@@ -180,7 +180,7 @@ class ProductsController extends WebController
                     ['key' => 'unit', 'label' => trans('nksoft::products.Unit'), 'data' => $units, 'type' => 'select'],
                     ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
-                    ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'select'],
+                    ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'text'],
                     ['key' => 'smell', 'label' => trans('nksoft::products.Product Detail'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
                     ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture($result), 'class' => 'col-12 col-lg-4', 'type' => 'select'],
@@ -207,6 +207,7 @@ class ProductsController extends WebController
                     ['key' => 'optionals_video', 'label' => 'Video', 'data' => null, 'type' => 'text'],
                     ['key' => 'optionals_banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'optionals_images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
+                    ['key' => 'optionals_delete', 'label' => trans('nksoft::common.Button.Delete'), 'data' => null, 'type' => 'checkbox'],
                 ],
             ],
         ];
@@ -385,12 +386,16 @@ class ProductsController extends WebController
 
     private function setOptionals($request, $result)
     {
+        $delete = $request->get('optionals_delete');
         $name = $request->get('optionals_name');
         $description = $request->get('optionals_description');
         $video_id = $request->get('optionals_video');
         $images = $request->file('optionals_images');
         $banner = $request->file('optionals_banner');
-        if ($name && $name != 'undefined') {
+        if ($delete) {
+            ProductOptional::where(['products_id' => $result->id])->forceDelete();
+        }
+        if (!$delete && $name && $name != 'undefined') {
             $data = [
                 'name' => $name,
                 'description' => $description,
@@ -466,6 +471,19 @@ class ProductsController extends WebController
 
             //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
+            $breadcrumb = [
+                ['link' => '', 'label' => \trans('nksoft::common.Home')],
+            ];
+            if ($result->regions) {
+                if ($result->regions->parent) {
+                    array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
+                }
+                array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
+            }
+            if ($result->brands) {
+                array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
+            }
+            array_push($breadcrumb, ['active' => true, 'link' => '#', 'label' => $result->name]);
             $response = [
                 'result' => $result,
                 'brands' => $brands,
@@ -473,10 +491,7 @@ class ProductsController extends WebController
                 'regions' => $regions,
                 'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
-                'breadcrumb' => [
-                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
-                    ['active' => true, 'link' => '#', 'label' => $result->name],
-                ],
+                'breadcrumb' => $breadcrumb,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {
