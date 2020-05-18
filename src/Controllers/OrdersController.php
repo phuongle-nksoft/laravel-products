@@ -42,6 +42,7 @@ class OrdersController extends WebController
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+                'disableNew' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -76,11 +77,11 @@ class OrdersController extends WebController
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'promotions', 'label' => trans('nksoft::common.promotions'), 'data' => null, 'readonly' => true, 'type' => 'label'],
-                    ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => null, 'readonly' => true, 'type' => 'number'],
-                    ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'data' => null, 'readonly' => true, 'type' => 'number'],
+                    ['key' => 'discount_code', 'label' => trans('nksoft::common.promotions'), 'data' => $result->discount_code, 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount'), 'data' => $result->discount_amount, 'readonly' => true, 'type' => 'label', 'formatter' => 'number'],
+                    ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'data' => $result->total, 'readonly' => true, 'type' => 'label', 'formatter' => 'number'],
                     ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
-                    ['key' => 'note', 'label' => trans('nksoft::products.Note'), 'data' => null, 'type' => 'textarea'],
+                    ['key' => 'note', 'label' => trans('nksoft::products.Note'), 'data' => $result->note, 'type' => 'label'],
                 ],
                 'active' => true,
             ],
@@ -88,22 +89,21 @@ class OrdersController extends WebController
                 'key' => 'customers',
                 'label' => trans('nksoft::common.customers'),
                 'element' => [
-                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
-                    ['key' => 'customer_phone', 'label' => trans('nksoft::common.Phone'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'customer_email', 'label' => trans('nksoft::common.Email'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => $result->customer->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'customer_phone', 'label' => trans('nksoft::common.Phone'), 'data' => $result->customer->phone, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'customer_email', 'label' => trans('nksoft::common.Email'), 'data' => $result->customer->email, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                 ],
             ],
             [
                 'key' => 'shippings',
                 'label' => trans('nksoft::common.shippings'),
                 'element' => [
-                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_phone', 'label' => trans('nksoft::common.Phone'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_address', 'label' => trans('nksoft::settings.Address'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_company', 'label' => trans('nksoft::common.Company'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_provinces', 'label' => trans('nksoft::products.Province'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_districts', 'label' => trans('nksoft::products.District'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
-                    ['key' => 'shippings_wards', 'label' => trans('nksoft::products.Wards'), 'data' => null, 'defaultValue' => '', 'readonly' => true, 'type' => 'text'],
+                    ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => $result->shipping->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_phone', 'label' => trans('nksoft::common.Phone'), 'data' => $result->shipping->phone, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_address', 'label' => trans('nksoft::settings.Address'), 'data' => $result->shipping->address, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_wards', 'label' => trans('nksoft::products.Wards'), 'data' => $result->shipping->wards->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_districts', 'label' => trans('nksoft::products.District'), 'data' => $result->shipping->districts->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_provinces', 'label' => trans('nksoft::products.Province'), 'data' => $result->shipping->provinces->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                 ],
             ],
             [
@@ -169,12 +169,15 @@ class OrdersController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::where(['id' => $id])->with(['shipping', 'orderDetails', 'promotion'])->get();
+            $result = CurrentModel::where(['id' => $id])->with(['shipping', 'orderDetails', 'promotion', 'customer'])->first();
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
                 'formData' => $this->formData,
                 'module' => $this->module,
+                'disableNew' => true,
+                'template' => 'order',
+                'disableDuplicate' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -195,10 +198,6 @@ class OrdersController extends WebController
         if ($result == null) {
             return $this->responseError();
         }
-        $validator = Validator($request->all(), $this->rules($id), $this->message());
-        if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
-        }
         try {
             $data = [];
             foreach ($this->formData as $item) {
@@ -206,20 +205,8 @@ class OrdersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            foreach ($data as $k => $v) {
-                $result->$k = $v;
-            }
-            $data['slug'] = $this->getSlug($data);
+            $result->status = $data['status'];
             $result->save();
-            $this->setUrlRedirects($result);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
-            if ($request->hasFile('banner')) {
-                $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, 2);
-            }
             $response = [
                 'result' => $result,
             ];
