@@ -468,21 +468,24 @@ class ProductsController extends WebController
                 ->orderBy('created_at', 'desc')
                 ->with($with)
                 ->take(15)->get();
-
+            $category = $result->categoryProductIndies->first();
             //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
             $breadcrumb = [
                 ['link' => '', 'label' => \trans('nksoft::common.Home')],
             ];
-            if ($result->regions) {
-                if ($result->regions->parent) {
-                    array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
-                }
-                array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
+            if ($category) {
+                array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
             }
-            if ($result->brands) {
-                array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
-            }
+            // if ($result->regions) {
+            //     if ($result->regions->parent) {
+            //         array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
+            //     }
+            //     array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
+            // }
+            // if ($result->brands) {
+            //     array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
+            // }
             array_push($breadcrumb, ['active' => true, 'link' => '#', 'label' => $result->name]);
             $response = [
                 'result' => $result,
@@ -603,7 +606,7 @@ class ProductsController extends WebController
     {
         try {
             $comment = ProductComments::where(['products_id' => $productId, 'parent_id' => 0, 'status' => 1])->with(['children'])->orderBy('id', 'desc')->paginate();
-            return $this->responseViewSuccess(['comment' => $comment]);
+            return $this->responseViewSuccess(['comment' => $comment, 'block' => Blocks::where(['identify' => 'product-detail-question', 'is_active' => 1])->first()]);
         } catch (\Exception $e) {
             return $this->responseError([$e->getMessage()]);
         }

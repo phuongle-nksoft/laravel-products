@@ -3,7 +3,9 @@
 namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Mail\OrderMail;
 use Nksoft\Products\Models\Customers;
 use Nksoft\Products\Models\OrderDetails;
 use Nksoft\Products\Models\Orders;
@@ -125,8 +127,9 @@ class PaymentsController extends WebController
             'total' => $total,
             'order_id' => bin2hex(random_bytes(4)),
             'price_contact' => $price_contact ? 1 : 0,
+            'area' => $request->get('area'),
         ];
-        if ($price_contact || !in_array($provinceId, [1, 50, 32])) {
+        if ($price_contact || !in_array($provinceId, [1, 50, 32]) || true) {
             $order = Orders::create($orderData);
             if ($order) {
                 $dataDetails = [];
@@ -144,7 +147,8 @@ class PaymentsController extends WebController
                 }
                 OrderDetails::insert($dataDetails);
                 $this->resetSession($order);
-                $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
+                $order = Orders::where(['id' => $order->id])->with(['shipping', 'customer'])->first();
+                Mail::to('leduyphuong64@gmail.com')->send(new OrderMail($order));
                 session(['order' => $order]);
                 return $this->responseViewSuccess(['url' => url('dat-hang-thanh-cong')]);
             }

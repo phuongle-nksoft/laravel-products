@@ -99,7 +99,7 @@ class NavigationsTableSeeder extends Seeder
             ],
             [
                 'title' => 'Payments',
-                'link' => 'payment',
+                'link' => 'payments',
                 'icon' => 'nav-icon fas fa-file-invoice',
                 'is_active' => true,
                 'roles_id' => json_encode([1, 2, 3]),
