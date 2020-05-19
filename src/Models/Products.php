@@ -22,12 +22,12 @@ class Products extends NksoftModel
 
     public function vintages()
     {
-        return $this->hasMany(VintagesProductIndex::class, 'products_id')->with(['vintages']);
+        return $this->hasMany(VintagesProductIndex::class, 'products_id')->where('vintages_id', '<>', 35)->with(['vintages']);
     }
 
     public function vintageBanner()
     {
-        return $this->belongsTo(Vintages::class, 'vintages_banner_id')->with(['images']);
+        return $this->belongsTo(Vintages::class, 'vintages_banner_id')->where('id', '<>', 35)->with(['images']);
     }
 
     public function brands()

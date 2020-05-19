@@ -29,8 +29,8 @@ class OrdersController extends WebController
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'order_id', 'label' => trans('nksoft::products.Order Id')],
                 ['key' => 'customers_id', 'label' => trans('nksoft::common.customers'), 'relationship' => 'customer'],
-                ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings'), 'relationship' => 'shipping'],
-                ['key' => 'total', 'label' => trans('nksoft::products.Total')],
+                ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings'), 'relationship' => 'shipping', 'childRelationship' => 'provinces'],
+                ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'formatter' => 'number'],
                 ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
@@ -178,6 +178,7 @@ class OrdersController extends WebController
                 'disableNew' => true,
                 'template' => 'order',
                 'disableDuplicate' => true,
+                'status' => config('nksoft.orderStatus'),
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {

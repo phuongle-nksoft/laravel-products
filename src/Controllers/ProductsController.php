@@ -44,7 +44,7 @@ class ProductsController extends WebController
             $columns = [
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
-                ['key' => 'price', 'label' => trans('nksoft::common.Price')],
+                ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'formatter' => 'number'],
                 ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture()],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
