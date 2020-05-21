@@ -213,7 +213,7 @@ class OrdersController extends WebController
      */
     public function update(Request $request, $id)
     {
-        $result = CurrentModel::find($id);
+        $result = CurrentModel::with(['orderDetails'])->find($id);
         if ($result == null) {
             return $this->responseError();
         }
@@ -224,7 +224,25 @@ class OrdersController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
-            $result->status = $data['status'];
+            if ($data['discount_code']) {
+                $promotion = Promotions::where(['code' => $data['discount_code']])->first();
+                if (!$promotion) {
+                    return $this->responseError(['Mã giảm giá không hợp lệ']);
+                }
+                $orderDetail = $result->orderDetails;
+                foreach ($orderDetail as $item) {
+                    $item->discount = $promotion->simple_action == 1 ? $promotion->discount_amount * $item->qty : (($promotion->discount_amount / 100) * $item->price) * $item->qty;
+                    $item->subtotal = ($item->price * $item->qty) - $item->discount;
+                    $item->save();
+                }
+                $result->promotion_id = $promotion->id;
+                $result->discount_code = $promotion->code;
+                $result->discount_amount = $promotion->discount_amount;
+            }
+            if ($data['status']) {
+                $result->status = $data['status'];
+            }
+
             $result->save();
             $response = [
                 'result' => $result,
