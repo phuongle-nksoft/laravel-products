@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Categories extends NksoftModel
 {
-    const FIELDS = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'page_template', 'meta_description'];
+    const FIELDS = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'page_template', 'type', 'meta_description'];
     protected $table = 'categories';
     protected $fillable = self::FIELDS;
     public function parentId()

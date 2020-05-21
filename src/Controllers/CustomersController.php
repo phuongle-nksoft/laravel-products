@@ -32,13 +32,19 @@ class CustomersController extends WebController
                 ['key' => 'email', 'label' => trans('nksoft::users.Email')],
             ];
             $select = Arr::pluck($columns, 'key');
-            $users = CurrentModel::select($select)->with(['histories'])->paginate();
+            $q = request()->get('q');
+            if ($q) {
+                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
+            } else {
+                $results = CurrentModel::select($select)->with(['histories'])->orderBy('updated_at', 'desc')->paginate();
+            }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $users,
+                'rows' => $results,
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+                'showSearch' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {

@@ -31,4 +31,7 @@ return [
     'Unit' => 'Đơn Vị Tính',
     'Wine' => 'Rượu',
     'Glass' => 'Ly',
+    'Beer' => 'Bia',
+    'Other' => 'Sản Phẩm Khác',
+    'Type' => 'Loại Dữ Liệu',
 ];

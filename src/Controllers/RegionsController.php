@@ -5,8 +5,11 @@ namespace Nksoft\Products\Controllers;
 use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\Products;
+use Nksoft\Products\Models\ProfessionalRatings;
 use Nksoft\Products\Models\Regions as CurrentModel;
+use Nksoft\Products\Models\VintagesProductIndex;
 
 class RegionsController extends WebController
 {
@@ -91,6 +94,7 @@ class RegionsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.regions'), 'data' => $categories, 'type' => 'select'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
@@ -188,13 +192,45 @@ class RegionsController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'slug'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'type', 'slug'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             $listIds = CurrentModel::GetListIds(['id' => $id]);
             if (!$result) {
                 return $this->responseError('404');
             }
             $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $allRequest = request()->all();
+            if (isset($allRequest['c'])) {
+                $categoryId = $allRequest['c'];
+                $products = $products->whereIn('id', function ($query) use ($categoryId) {
+                    $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['vg'])) {
+                $vingateId = $allRequest['vg'];
+                $products = $products->whereIn('id', function ($query) use ($vingateId) {
+                    $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->where('vintages_id', $vingateId)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['p'])) {
+                $professionalId = $allRequest['p'];
+                $products = $products->whereIn('id', function ($query) use ($professionalId) {
+                    $query->from(with(new ProfessionalRatings())->getTable())->select(['products_id'])->where('professionals_id', $professionalId)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['v'])) {
+                $volume = $allRequest['v'];
+                $products = $products->where(['volume' => $volume]);
+            }
+            if (isset($allRequest['sort'])) {
+                $sort = $allRequest['sort'];
+                $condition = explode('-', $sort);
+                $products = $products->orderBy($condition[0], $condition[1]);
+            }
+            if (isset($allRequest['qty'])) {
+                $qty = $allRequest['qty'];
+                $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
+            }
             $image = $result->images()->first();
             $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
             $response = [
@@ -215,6 +251,7 @@ class RegionsController extends WebController
                     'ogSiteName' => $result->name,
                 ],
                 'url' => $this->module . '/' . $result->id,
+                'filter' => $this->listFilter($result->type),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

@@ -86,7 +86,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'customers',
                 'icon' => 'nav-icon fas fa-users',
                 'is_active' => true,
-                'roles_id' => json_encode([1, 2, 3]),
+                'roles_id' => json_encode([1, 3]),
                 'order_by' => 1,
             ],
             [
@@ -94,7 +94,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'orders',
                 'icon' => 'nav-icon fas fa-luggage-cart',
                 'is_active' => true,
-                'roles_id' => json_encode([1, 2, 3]),
+                'roles_id' => json_encode([1, 3]),
                 'order_by' => 3,
             ],
             [
@@ -102,7 +102,7 @@ class NavigationsTableSeeder extends Seeder
                 'link' => 'payments',
                 'icon' => 'nav-icon fas fa-file-invoice',
                 'is_active' => true,
-                'roles_id' => json_encode([1, 2, 3]),
+                'roles_id' => json_encode([1, 3]),
                 'order_by' => 2,
             ],
         ];

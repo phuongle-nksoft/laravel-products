@@ -159,6 +159,7 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_banner_id', 'label' => trans('nksoft::products.Vintages Content'), 'data' => $vintages, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_id', 'label' => trans('nksoft::products.Vintages Title'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
@@ -392,10 +393,9 @@ class ProductsController extends WebController
         $video_id = $request->get('optionals_video');
         $images = $request->file('optionals_images');
         $banner = $request->file('optionals_banner');
-        if ($delete) {
+        if ($delete || $name == null) {
             ProductOptional::where(['products_id' => $result->id])->forceDelete();
-        }
-        if (!$delete && $name && $name != 'undefined') {
+        } else if ($name != null) {
             $data = [
                 'name' => $name,
                 'description' => $description,
@@ -558,6 +558,9 @@ class ProductsController extends WebController
             foreach ($this->formData as $item) {
                 if (!in_array($item, $this->excFields)) {
                     $data[$item] = $request->get($item);
+                    if ($data[$item] === 'undefined') {
+                        $data[$item] = null;
+                    }
                 }
             }
             $data['slug'] = $this->getSlug($data);
@@ -708,10 +711,5 @@ class ProductsController extends WebController
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());
         }
-    }
-
-    public function listFilter()
-    {
-        dd('list');
     }
 }

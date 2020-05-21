@@ -148,7 +148,7 @@ class PaymentsController extends WebController
                 OrderDetails::insert($dataDetails);
                 $this->resetSession($order);
                 $order = Orders::where(['id' => $order->id])->with(['shipping', 'customer'])->first();
-                Mail::to('leduyphuong64@gmail.com')->send(new OrderMail($order));
+                Mail::to('marketingwinecellar@gmail.com')->send(new OrderMail($order));
                 session(['order' => $order]);
                 return $this->responseViewSuccess(['url' => url('dat-hang-thanh-cong')]);
             }

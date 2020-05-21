@@ -4,6 +4,7 @@ namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\Orders as CurrentModel;
 use Nksoft\Products\Models\Products;
@@ -34,7 +35,23 @@ class OrdersController extends WebController
                 ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->with(['histories', 'shipping', 'customer'])->paginate();
+            $userRoles = Auth::user()->role_id;
+            $results = CurrentModel::select($select)->with(['histories', 'shipping', 'customer']);
+            $q = request()->get('q');
+            if ($q) {
+                $results = $results->where('order_id', 'like', '%' . $q . '%');
+            }
+            if ($userRoles > 1) {
+                $results = $results->where(['area' => Auth::user()->area]);
+            }
+
+            $results = $results->orderBy('created_at', 'desc');
+            if ($q) {
+                $results = $results->get();
+            } else {
+                $results = $results->paginate();
+            }
+
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
 
             $response = [
@@ -43,6 +60,7 @@ class OrdersController extends WebController
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
                 'disableNew' => true,
+                'showSearch' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {

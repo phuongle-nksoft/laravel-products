@@ -7,8 +7,10 @@ Route::group(['prefix' => 'api/admin', 'middleware' => 'web', 'namespace' => 'Nk
     Route::get('vintages/search', 'VintagesController@index');
     Route::get('brands/search', 'BrandsController@index');
     Route::get('regions/search', 'RegionsController@index');
+    Route::get('customers/search', 'CustomersController@index');
+    Route::get('orders/search', 'OrdersController@index');
     Route::resources([
-        '/' => CategoriesController::class,
+        '/' => OrdersController::class,
         'categories' => CategoriesController::class,
         'products' => ProductsController::class,
         'customers' => CustomersController::class,

@@ -80,6 +80,7 @@ class BrandsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
@@ -162,12 +163,14 @@ class BrandsController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'type', 'meta_description', 'type', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             if (!$result) {
                 return $this->responseError('404');
             }
             $products = Products::where(['brands_id' => $id, 'is_active' => 1])
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $image = $result->images()->first();
+            $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -178,6 +181,14 @@ class BrandsController extends WebController
                     ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
+                'seo' => [
+                    'title' => $result->name,
+                    'ogDescription' => $result->meta_description,
+                    'ogUrl' => url($result->slug),
+                    'ogImage' => url($im),
+                    'ogSiteName' => $result->name,
+                ],
+                'filter' => $this->listFilter($result->type),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

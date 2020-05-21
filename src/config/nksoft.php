@@ -20,5 +20,7 @@ return [
     'productType' => [
         ['id' => 1, 'name' => trans('nksoft::products.Wine')],
         ['id' => 2, 'name' => trans('nksoft::products.Glass')],
+        ['id' => 3, 'name' => trans('nksoft::products.Beer')],
+        ['id' => 4, 'name' => trans('nksoft::products.Other')],
     ],
 ];

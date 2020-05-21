@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Orders extends NksoftModel
 {
-    const FIELDS = ['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'price_contact', 'order_id', 'status'];
+    const FIELDS = ['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'area', 'price_contact', 'order_id', 'status'];
     protected $table = 'orders';
     protected $fillable = self::FIELDS;
     public function payment()
