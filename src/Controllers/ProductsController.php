@@ -663,7 +663,7 @@ class ProductsController extends WebController
     public function getHome()
     {
         try {
-            $ads = Blocks::where(['is_active' => 1])->with(['images'])->take(9)->offset(2)->get();
+            $ads = Blocks::where(['is_active' => 1])->with(['images'])->get();
             $tags = Tags::take(4)->with(['productTags']);
             $tagIds = $tags->pluck('id')->toArray();
             $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {

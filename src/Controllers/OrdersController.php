@@ -45,7 +45,7 @@ class OrdersController extends WebController
                 $results = $results->where(['area' => Auth::user()->area]);
             }
 
-            $results = $results->orderBy('created_at', 'desc');
+            $results = $results->orderBy('created_at', 'desc')->orderBy('status', 'asc');
             if ($q) {
                 $results = $results->get();
             } else {
@@ -218,38 +218,43 @@ class OrdersController extends WebController
             return $this->responseError();
         }
         try {
-            $data = [];
-            foreach ($this->formData as $item) {
-                if (!\in_array($item, $this->excludeCol)) {
-                    $data[$item] = $request->get($item);
-                }
-            }
+            $data = $request->all();
             if ($data['discount_code']) {
-                $promotion = Promotions::where(['code' => $data['discount_code']])->first();
+                $promotion = Promotions::where(['code' => $data['discount_code']])->whereDate('expice_date', '>', date('Y-m-d'))->first();
                 if (!$promotion) {
                     return $this->responseError(['Mã giảm giá không hợp lệ']);
                 }
                 $orderDetail = $result->orderDetails;
                 foreach ($orderDetail as $item) {
-                    $item->discount = $promotion->simple_action == 1 ? $promotion->discount_amount * $item->qty : (($promotion->discount_amount / 100) * $item->price) * $item->qty;
-                    $item->subtotal = ($item->price * $item->qty) - $item->discount;
+                    if ($promotion->all_products == 1 || in_array($item->products_id, json_decode($promotion->product_ids))) {
+                        $item->discount = $promotion->simple_action == 2 ? $promotion->discount_amount * $item->qty : (($promotion->discount_amount / 100) * $item->price) * $item->qty;
+                        $item->subtotal = ($item->price * $item->qty) - $item->discount;
+                        $item->save();
+                    }
+                }
+
+            }
+            if (isset($data['remove_discount']) || !$data['discount_code']) {
+                $orderDetail = $result->orderDetails;
+                foreach ($orderDetail as $item) {
+                    $item->discount = 0;
+                    $item->subtotal = $item->price * $item->qty;
                     $item->save();
                 }
-                $result->promotion_id = $promotion->id;
-                $result->discount_code = $promotion->code;
-                $result->discount_amount = $promotion->discount_amount;
             }
-            if ($data['status']) {
-                $result->status = $data['status'];
-            }
-
+            $result->promotion_id = $promotion->id ?? 0;
+            $result->discount_code = $promotion->code ?? '';
+            $result->discount_amount = $promotion->discount_amount ?? 0;
+            $result->delivery_charges = $data['delivery_charges'];
+            $result->note = $data['note'];
+            $result->status = $data['status'];
             $result->save();
             $response = [
                 'result' => $result,
             ];
             return $this->responseSuccess($response);
         } catch (\Exception $e) {
-            return $this->responseError($e);
+            return $this->responseError([$e->getMessage()]);
         }
     }
 

@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Orders extends NksoftModel
 {
-    const FIELDS = ['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'area', 'price_contact', 'order_id', 'status'];
+    const FIELDS = ['id', 'customers_id', 'shippings_id', 'promotion_id', 'discount_code', 'discount_amount', 'total', 'area', 'price_contact', 'order_id', 'status', 'delivery_charges', 'note'];
     protected $table = 'orders';
     protected $fillable = self::FIELDS;
     public function payment()
@@ -16,7 +16,7 @@ class Orders extends NksoftModel
 
     public function orderDetails()
     {
-        return $this->hasMany(OrderDetails::class, 'orders_id')->select(['id', 'orders_id', 'products_id', 'qty', 'price', 'special_price', 'subtotal', 'name', 'created_at'])->with(['products']);
+        return $this->hasMany(OrderDetails::class, 'orders_id')->select(['id', 'orders_id', 'products_id', 'qty', 'price', 'special_price', 'discount', 'subtotal', 'name', 'created_at'])->with(['products']);
     }
 
     public function shipping()
