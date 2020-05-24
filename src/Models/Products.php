@@ -17,7 +17,7 @@ class Products extends NksoftModel
 
     public function firstCategory()
     {
-        return $this->hasOne(CategoryProductsIndex::class, 'categories_id')->with(['categories']);
+        return $this->hasOne(CategoryProductsIndex::class, 'products_id')->with(['categories']);
     }
 
     public function vintages()

@@ -168,7 +168,7 @@ class BrandsController extends WebController
                 return $this->responseError('404');
             }
             $products = Products::where(['brands_id' => $id, 'is_active' => 1])
-                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'])->orderBy('price', 'asc');
             $image = $result->images()->first();
             $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
             $response = [

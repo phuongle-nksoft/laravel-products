@@ -216,6 +216,7 @@ class ProductsController extends WebController
 
     private function rules()
     {
+        $vintages = request()->get('vintages_id');
         $rules = [
             'name' => 'required',
             'categories_id' => 'required',
@@ -253,6 +254,9 @@ class ProductsController extends WebController
      */
     public function store(Request $request)
     {
+        if (!$this->checkVintages($request)) {
+            return $this->responseError([__('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Vintages Title')])]);
+        }
         $validator = Validator($request->all(), $this->rules(), $this->message());
         if ($validator->fails()) {
             return $this->responseError($validator->errors());
@@ -319,22 +323,20 @@ class ProductsController extends WebController
     }
     private function setTags($request, $result)
     {
-        $tagIds = \json_decode($request->get('tags'));
-        if (!$tagIds) {
-            return;
-        }
-
-        /** Delete record by category id not in list */
-        ProductTags::where(['products_id' => $result->id])->whereNotIn('tags_id', $tagIds)->forceDelete();
+        $tagIds = \json_decode($request->get('tags')) ?? [];
+        $tags = ProductTags::where(['products_id' => $result->id]);
         /** Save new record */
-
-        foreach ($tagIds as $id) {
-            $productTags = [
-                'products_id' => $result->id,
-                'tags_id' => $id,
-            ];
-            ProductTags::updateOrCreate(['products_id' => $result->id, 'tags_id' => $id], $productTags);
+        if (count($tagIds) > 0) {
+            $tags = $tags->whereNotIn('tags_id', $tagIds);
+            foreach ($tagIds as $id) {
+                $productTags = [
+                    'products_id' => $result->id,
+                    'tags_id' => $id,
+                ];
+                ProductTags::updateOrCreate(['products_id' => $result->id, 'tags_id' => $id], $productTags);
+            }
         }
+        $tags->forceDelete();
     }
 
     private function setCategoryProductsIndex(Request $request, $result)
@@ -345,6 +347,7 @@ class ProductsController extends WebController
         }
 
         if (!$categoryIds) {
+            CategoryProductsIndex::where(['products_id' => $result->id])->forceDelete();
             return;
         }
 
@@ -361,28 +364,42 @@ class ProductsController extends WebController
         }
     }
 
+    private function checkVintages($request)
+    {
+        $vintageIds = \json_decode($request->get('vintages_id'));
+        if (!is_array($vintageIds)) {
+            $vintageIds = array($vintageIds);
+        }
+        if (count($vintageIds) == 0) {
+            return false;
+        }
+        return true;
+    }
+
     private function setVintagesProductsIndex($request, $result)
     {
         $vintageIds = \json_decode($request->get('vintages_id'));
         if (!is_array($vintageIds)) {
             $vintageIds = array($vintageIds);
         }
-
-        if (!$vintageIds) {
-            return;
+        if (count($vintageIds) == 0) {
+            return $this->responseError([__('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Vintages Title')])]);
         }
 
         /** Delete record by category id not in list */
         VintagesProductIndex::where(['products_id' => $result->id])->whereNotIn('vintages_id', $vintageIds)->forceDelete();
 
         /** Save new record */
-        foreach ($vintageIds as $id) {
-            $data = [
-                'products_id' => $result->id,
-                'vintages_id' => $id,
-            ];
-            VintagesProductIndex::updateOrCreate(['products_id' => $result->id, 'vintages_id' => $id], $data);
+        if (count($vintageIds) > 0) {
+            foreach ($vintageIds as $id) {
+                $data = [
+                    'products_id' => $result->id,
+                    'vintages_id' => $id,
+                ];
+                VintagesProductIndex::updateOrCreate(['products_id' => $result->id, 'vintages_id' => $id], $data);
+            }
         }
+
     }
 
     private function setOptionals($request, $result)
@@ -424,7 +441,7 @@ class ProductsController extends WebController
     {
         try {
             $select = CurrentModel::FIELDS;
-            $with = ['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner', 'productOptional'];
+            $with = ['images', 'firstCategory', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner', 'productOptional'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)
                 ->with($with)->first();
@@ -545,6 +562,9 @@ class ProductsController extends WebController
      */
     public function update(Request $request, $id)
     {
+        if (!$this->checkVintages($request)) {
+            return $this->responseError([__('nksoft::message.Field is require!', ['Field' => trans('nksoft::products.Vintages Title')])]);
+        }
         $result = CurrentModel::find($id);
         if ($result == null) {
             return $this->responseError();
@@ -664,11 +684,11 @@ class ProductsController extends WebController
     {
         try {
             $ads = Blocks::where(['is_active' => 1])->with(['images'])->get();
-            $tags = Tags::take(4)->with(['productTags']);
+            $tags = Tags::offset(0)->take(4)->with(['productTags']);
             $tagIds = $tags->pluck('id')->toArray();
             $products = CurrentModel::whereIn('id', function ($query) use ($tagIds) {
                 $query->from(with(new ProductTags())->getTable())->select(['products_id'])->whereIn('tags_id', $tagIds)->pluck('products_id');
-            })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags'])->orderBy('updated_at', 'desc')->get();
+            })->where(['is_active' => 1])->with(['professionalsRating', 'images', 'productTags', 'firstCategory'])->orderBy('updated_at', 'desc')->get();
             $setting = Settings::first();
             $settingImage = $setting->images()->first();
             $img = $settingImage ? url('storage/' . $settingImage->image) : url('wine/images/share/logo.svg');

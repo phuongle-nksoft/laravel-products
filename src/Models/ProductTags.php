@@ -14,7 +14,7 @@ class ProductTags extends NksoftModel
     {
         return $this->belongsTo(Products::class, 'products_id')->where(['is_active' => 1])
             ->select(Products::FIELDS)
-            ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            ->with(['professionalsRating', 'images', 'firstCategory'])->orderBy('updated_at', 'desc');
     }
 
     public function tags()

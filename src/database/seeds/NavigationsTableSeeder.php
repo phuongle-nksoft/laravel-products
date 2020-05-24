@@ -106,13 +106,66 @@ class NavigationsTableSeeder extends Seeder
                 'order_by' => 2,
             ],
         ];
+        $promotion = [
+            [
+                'title' => 'banners',
+                'link' => 'banners',
+                'icon' => 'nav-icon far fa-images',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 2,
+            ],
+            [
+                'title' => 'Promotion Images',
+                'link' => 'promotion-images',
+                'icon' => 'nav-icon fas fa-link',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 1,
+            ],
+        ];
+        $clientRequest = [
+            [
+                'title' => 'Contacts',
+                'link' => 'contacts',
+                'icon' => 'nav-icon fas fa-address-card',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 1,
+            ],
+            [
+                'title' => 'Recruits',
+                'link' => 'recruits',
+                'icon' => 'nav-icon fas fa-receipt',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 2,
+            ],
+            [
+                'title' => 'Comments',
+                'link' => 'comments',
+                'icon' => 'nav-icon fas fa-comment-dots',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 3,
+            ],
+        ];
         $items = [
+            [
+                'title' => 'Promotions',
+                'link' => '#',
+                'icon' => '',
+                'is_active' => true,
+                'order_by' => 1,
+                'roles_id' => json_encode([1, 2]),
+                'child' => serialize($promotion),
+            ],
             [
                 'title' => 'Products',
                 'link' => '#',
                 'icon' => '',
                 'is_active' => true,
-                'order_by' => 1,
+                'order_by' => 2,
                 'roles_id' => json_encode([1, 2]),
                 'child' => serialize($products),
             ],
@@ -121,9 +174,18 @@ class NavigationsTableSeeder extends Seeder
                 'link' => '#',
                 'icon' => '',
                 'is_active' => true,
-                'order_by' => 2,
+                'order_by' => 3,
                 'roles_id' => json_encode([1, 2, 3]),
                 'child' => serialize($sales),
+            ],
+            [
+                'title' => 'Client Request',
+                'link' => '#',
+                'icon' => '',
+                'is_active' => true,
+                'order_by' => 1,
+                'roles_id' => json_encode([1, 2]),
+                'child' => serialize($clientRequest),
             ],
         ];
         Navigations::saveItem($items);

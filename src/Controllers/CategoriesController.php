@@ -237,6 +237,8 @@ class CategoriesController extends WebController
                 $sort = $allRequest['sort'];
                 $condition = explode('-', $sort);
                 $products = $products->orderBy($condition[0], $condition[1]);
+            } else {
+                $products = $products->orderBy('price', 'asc');
             }
             if (isset($allRequest['qty'])) {
                 $qty = $allRequest['qty'];
