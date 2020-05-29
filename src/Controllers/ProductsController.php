@@ -488,6 +488,7 @@ class ProductsController extends WebController
             $category = $result->categoryProductIndies->first();
             //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
+            $image = $result->images()->where(['group_id' => 1])->first();
             $breadcrumb = [
                 ['link' => '', 'label' => \trans('nksoft::common.Home')],
             ];
@@ -512,6 +513,13 @@ class ProductsController extends WebController
                 'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
                 'breadcrumb' => $breadcrumb,
+                'seo' => [
+                    'title' => $result->name,
+                    'ogDescription' => $result->meta_description,
+                    'ogUrl' => url($category->categories->slug . '/' . $result->slug),
+                    'ogImage' => url('storage/' . $image->image),
+                    'ogSiteName' => $result->name,
+                ],
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

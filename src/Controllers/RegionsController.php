@@ -192,12 +192,21 @@ class RegionsController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'type', 'slug'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
-            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            $where = ['is_active' => 1, 'id' => $id];
+            if (in_array($id, [69, 70])) {
+                $where = ['id' => $id];
+            }
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'type', 'slug'])->with(['images'])->where($where)->first();
+            if (in_array($id, [69, 70])) {
+                $listIds = CurrentModel::GetListIds(['type' => $result->type, 'is_active' => 1, 'parent_id' => 0]);
+            } else {
+                $listIds = CurrentModel::GetListIds(['id' => $id]);
+            }
+
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)
+            $products = Products::where(['is_active' => 1, 'type' => $result->type])->whereIn('regions_id', $listIds)
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['c'])) {
@@ -205,6 +214,10 @@ class RegionsController extends WebController
                 $products = $products->whereIn('id', function ($query) use ($categoryId) {
                     $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
                 });
+            }
+            if (isset($allRequest['r'])) {
+                $regionId = $allRequest['r'];
+                $products = $products->where(['regions_id' => $regionId]);
             }
             if (isset($allRequest['vg'])) {
                 $vingateId = $allRequest['vg'];
@@ -235,6 +248,7 @@ class RegionsController extends WebController
             }
             $image = $result->images()->first();
             $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
+            $allowId = [69, 5];
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -253,7 +267,7 @@ class RegionsController extends WebController
                     'ogSiteName' => $result->name,
                 ],
                 'url' => $this->module . '/' . $result->id,
-                'filter' => $this->listFilter($result->type),
+                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'r' : ''),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

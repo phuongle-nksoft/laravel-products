@@ -18,6 +18,7 @@ Route::group(['middleware' => 'web'], function () {
             'professionals' => WebController::class,
             'promotions' => WebController::class,
             'tags' => WebController::class,
+            'comments' => WebController::class,
         ]);
     });
     Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

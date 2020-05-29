@@ -5,17 +5,14 @@ namespace Nksoft\Products\Controllers;
 use Arr;
 use Illuminate\Http\Request;
 use Nksoft\Master\Controllers\WebController;
-use Nksoft\Products\Models\Categories as CurrentModel;
-use Nksoft\Products\Models\CategoryProductsIndex;
+use Nksoft\Products\Models\ProductComments as CurrentModel;
 use Nksoft\Products\Models\Products;
-use Nksoft\Products\Models\ProfessionalRatings;
-use Nksoft\Products\Models\VintagesProductIndex;
 
-class CategoriesController extends WebController
+class ProductCommentController extends WebController
 {
     private $formData = CurrentModel::FIELDS;
 
-    protected $module = 'categories';
+    protected $module = 'comments';
 
     protected $model = CurrentModel::class;
     /**
@@ -29,16 +26,17 @@ class CategoriesController extends WebController
             $columns = [
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
+                ['key' => 'products_id', 'label' => trans('nksoft::common.products'), 'relationship' => 'product'],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
+            $results = CurrentModel::select($select);
             if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
+                $results = $results->where('name', 'like', '%' . $q . '%')->with(['histories', 'product'])->get();
             } else {
-                $results = CurrentModel::select($select)->with(['histories'])->paginate();
+                $results = $results->with(['histories', 'product'])->orderBy('updated_at', 'desc')->paginate();
             }
-
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,
@@ -46,6 +44,7 @@ class CategoriesController extends WebController
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
                 'showSearch' => true,
+                'disableNew' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -61,9 +60,6 @@ class CategoriesController extends WebController
     public function create()
     {
         try {
-            \array_push($this->formData, 'images');
-            \array_push($this->formData, 'banner');
-            \array_push($this->formData, 'maps');
             $response = [
                 'formElement' => $this->formElement(),
                 'result' => null,
@@ -76,46 +72,16 @@ class CategoriesController extends WebController
         }
     }
 
-    public function pageTemplate()
-    {
-        $pages = [];
-        foreach (config('nksoft.productTemplates') as $v => $k) {
-            $pages[] = ['id' => $k['id'], 'name' => trans('nksoft::common.layout.' . $k['name'])];
-        }
-        return $pages;
-    }
-
     private function formElement($result = null)
     {
-        $categories = [
-            [
-                'text' => trans('nksoft::common.root'),
-                'id' => 0,
-                'icon' => 'fas fa-folder',
-                'state' => [
-                    'opened' => true,
-                    'selected' => $result && $result->parent_id == 0,
-                ],
-                'children' => CurrentModel::GetListCategories(array('parent_id' => 0), $result),
-            ],
-        ];
+        $status = $this->status();
         return [
             [
                 'key' => 'general',
                 'label' => trans('nksoft::common.General'),
                 'element' => [
-                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                    ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
                     ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
-                    ['key' => 'page_template', 'label' => trans('nksoft::common.Layout Page'), 'data' => $this->pageTemplate(), 'type' => 'select'],
-                    ['key' => 'parent_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
-                ],
-                'active' => true,
-            ],
-            [
-                'key' => 'inputForm',
-                'label' => trans('nksoft::common.Content'),
-                'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
@@ -123,8 +89,10 @@ class CategoriesController extends WebController
                     ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
-                    ['key' => 'maps', 'label' => trans('nksoft::common.Icon'), 'data' => null, 'type' => 'image'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
+                'active' => true,
+                'selected' => $result && $result->parent_id == 0,
             ],
         ];
     }
@@ -160,18 +128,14 @@ class CategoriesController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if (!in_array($item, $this->excludeCol)) {
+                if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
-            }
-            if (!$data['parent_id']) {
-                $data['parent_id'] = 0;
             }
             if ($request->get('duplicate')) {
                 $data['slug'] = null;
             }
             $data['slug'] = $this->getSlug($data);
-
             $result = CurrentModel::create($data);
             $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
@@ -181,10 +145,6 @@ class CategoriesController extends WebController
             if ($request->hasFile('banner')) {
                 $images = $request->file('banner');
                 $this->setMedia($images, $result->id, $this->module, 2);
-            }
-            if ($request->hasFile('maps')) {
-                $images = $request->file('maps');
-                $this->setMedia($images, $result->id, $this->module, 3);
             }
             $response = [
                 'result' => $result,
@@ -204,55 +164,14 @@ class CategoriesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'page_template', 'type'])->with(['images'])->where(['id' => $id])->first();
-            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            $result = CurrentModel::select(['description', 'name', 'type', 'meta_description', 'type', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::whereIn('id', function ($query) use ($listIds) {
-                $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->pluck('products_id');
-            })->where(['is_active' => 1, 'type' => $result->type])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
-            $allRequest = request()->all();
-            if (isset($allRequest['vg'])) {
-                $vingateId = $allRequest['vg'];
-                $products = $products->whereIn('id', function ($query) use ($vingateId) {
-                    $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->where('vintages_id', $vingateId)->pluck('products_id');
-                });
-            }
-            if (isset($allRequest['c'])) {
-                $categoryId = $allRequest['c'];
-                $products = $products->whereIn('id', function ($query) use ($categoryId) {
-                    $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
-                });
-            }
-            if (isset($allRequest['r'])) {
-                $regionId = $allRequest['r'];
-                $products = $products->where(['regions_id' => $regionId]);
-            }
-            if (isset($allRequest['p'])) {
-                $professionalId = $allRequest['p'];
-                $products = $products->whereIn('id', function ($query) use ($professionalId) {
-                    $query->from(with(new ProfessionalRatings())->getTable())->select(['products_id'])->where('professionals_id', $professionalId)->pluck('products_id');
-                });
-            }
-            if (isset($allRequest['v'])) {
-                $volume = $allRequest['v'];
-                $products = $products->where(['volume' => $volume]);
-            }
-            if (isset($allRequest['sort'])) {
-                $sort = $allRequest['sort'];
-                $condition = explode('-', $sort);
-                $products = $products->orderBy($condition[0], $condition[1]);
-            } else {
-                $products = $products->orderBy('price', 'asc');
-            }
-            if (isset($allRequest['qty'])) {
-                $qty = $allRequest['qty'];
-                $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
-            }
+            $products = Products::where(['brands_id' => $id, 'is_active' => 1])
+                ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'])->orderBy('price', 'asc');
             $image = $result->images()->first();
             $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
-            $allowId = [11];
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -270,7 +189,7 @@ class CategoriesController extends WebController
                     'ogImage' => url($im),
                     'ogSiteName' => $result->name,
                 ],
-                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : ''),
+                'filter' => $this->listFilter($result->type),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {
@@ -288,14 +207,14 @@ class CategoriesController extends WebController
     {
         try {
             $result = CurrentModel::select($this->formData)->with(['images'])->find($id);
-            \array_push($this->formData, 'images');
-            \array_push($this->formData, 'banner');
-            \array_push($this->formData, 'maps');
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
                 'formData' => $this->formData,
                 'module' => $this->module,
+                'disableNew' => true,
+                'template' => 'order',
+                'disableDuplicate' => true,
             ];
             return $this->responseSuccess($response);
         } catch (\Execption $e) {
@@ -323,17 +242,14 @@ class CategoriesController extends WebController
         try {
             $data = [];
             foreach ($this->formData as $item) {
-                if (!in_array($item, $this->excludeCol)) {
+                if (!\in_array($item, $this->excludeCol)) {
                     $data[$item] = $request->get($item);
                 }
             }
-            if (!$data['parent_id']) {
-                $data['parent_id'] = 0;
-            }
-            $data['slug'] = $this->getSlug($data);
             foreach ($data as $k => $v) {
                 $result->$k = $v;
             }
+            $data['slug'] = $this->getSlug($data);
             $result->save();
             $this->setUrlRedirects($result);
             if ($request->hasFile('images')) {
@@ -344,10 +260,6 @@ class CategoriesController extends WebController
                 $images = $request->file('banner');
                 $this->setMedia($images, $result->id, $this->module, 2);
             }
-            if ($request->hasFile('maps')) {
-                $images = $request->file('maps');
-                $this->setMedia($images, $result->id, $this->module, 3);
-            }
             $response = [
                 'result' => $result,
             ];
@@ -356,29 +268,4 @@ class CategoriesController extends WebController
             return $this->responseError($e);
         }
     }
-
-    public function search()
-    {
-        try {
-            $columns = [
-                ['key' => 'id', 'label' => 'Id'],
-                ['key' => 'name', 'label' => trans('nksoft::common.Name')],
-                ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status()],
-            ];
-            $select = Arr::pluck($columns, 'key');
-            $q = request()->get('q');
-            $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
-            $listDelete = $this->getHistories($this->module)->pluck('parent_id');
-            $response = [
-                'rows' => $results,
-                'columns' => $columns,
-                'module' => $this->module,
-                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
-            ];
-            return $this->responseSuccess($response);
-        } catch (\Execption $e) {
-            return $this->responseError($e);
-        }
-    }
-
 }

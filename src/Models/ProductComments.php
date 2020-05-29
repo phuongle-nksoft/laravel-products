@@ -13,4 +13,14 @@ class ProductComments extends NksoftModel
     {
         return $this->belongsTo('\Nksoft\Products\Models\ProductComments', 'parent_id');
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Products::class, 'products_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customers::class, 'customers_id');
+    }
 }

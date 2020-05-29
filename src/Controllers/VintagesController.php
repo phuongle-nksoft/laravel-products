@@ -187,17 +187,28 @@ class VintagesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'type', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $rootItem = in_array($id, [37]);
+            $where = ['is_active' => 1, 'id' => $id];
+            if ($rootItem) {
+                $where = ['id' => $id];
+            }
+
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'type', 'id'])->with(['images'])->where($where)->first();
             if (!$result) {
                 return $this->responseError('404');
             }
-            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            if ($rootItem) {
+                $listIds = CurrentModel::GetListIds(['parent_id' => 0, 'type' => $result->type]);
+            } else {
+                $listIds = CurrentModel::GetListIds(['id' => $id]);
+            }
+
             if (!$result) {
                 return $this->responseError('404');
             }
             $products = Products::whereIn('id', function ($query) use ($listIds) {
                 $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->whereIn('vintages_id', $listIds)->groupBy('products_id')->pluck('products_id');
-            })->where(['is_active' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            })->where(['is_active' => 1, 'type' => $result->type])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['c'])) {
                 $categoryId = $allRequest['c'];
@@ -205,9 +216,15 @@ class VintagesController extends WebController
                     $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
                 });
             }
-            if (isset($allRequest['r'])) {
+            if ($rootItem && isset($allRequest['r'])) {
                 $regionId = $allRequest['r'];
                 $products = $products->where(['regions_id' => $regionId]);
+            }
+            if (isset($allRequest['vg'])) {
+                $vingateId = $allRequest['vg'];
+                $products = $products->whereIn('id', function ($query) use ($vingateId) {
+                    $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->where('vintages_id', $vingateId)->pluck('products_id');
+                });
             }
             if (isset($allRequest['p'])) {
                 $professionalId = $allRequest['p'];
@@ -232,6 +249,7 @@ class VintagesController extends WebController
             }
             $image = $result->images()->first();
             $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
+            $allowId = [37];
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -249,7 +267,7 @@ class VintagesController extends WebController
                     'ogImage' => url($im),
                     'ogSiteName' => $result->name,
                 ],
-                'filter' => $this->listFilter($result->type),
+                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'vg' : ''),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

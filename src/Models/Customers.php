@@ -7,7 +7,7 @@ use Nksoft\Products\Models\Shipping;
 
 class Customers extends NksoftModel
 {
-    const FIELDS = ['id', 'name', 'is_active', 'password', 'email', 'phone'];
+    const FIELDS = ['id', 'name', 'is_active', 'password', 'email', 'phone', 'birthday'];
     protected $table = 'customers';
     protected $fillable = self::FIELDS;
     protected $hidden = ['password'];
