@@ -749,6 +749,59 @@ class ProductsController extends WebController
 
     public function filter($slug)
     {
-        dd($slug);
+        try {
+            $filter = config('nksoft.filterCustom');
+            $item = collect($filter)->firstWhere('slug', $slug);
+            $productId = [];
+            if ($item['type'] == 'professional') {
+                $productId = ProfessionalRatings::select(['products_id'])->where($item['key'], '>=', $item['value'])->groupBy('products_id')->pluck('products_id');
+            }
+            $products = CurrentModel::where(['is_active' => 1, 'type' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            if (count($productId) > 0) {
+                $products = $products->whereIn('id', $productId);
+            }
+            if ($item['type'] == 'products') {
+                if (isset($item['condition']) && $item['condition'] == 'gt') {
+                    $products = $products->where($item['key'], '>=', $item['value']);
+                } else {
+                    $products = $products->where($item['key'], $item['value']);
+                }
+            }
+            $allRequest = request()->all();
+            if (isset($allRequest['sort'])) {
+                $sort = $allRequest['sort'];
+                $condition = explode('-', $sort);
+                $products = $products->orderBy($condition[0], $condition[1]);
+            } else {
+                $products = $products->orderBy('price', 'asc');
+            }
+            if (isset($allRequest['qty'])) {
+                $qty = $allRequest['qty'];
+                $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
+            }
+            $im = 'wine/images/share/logo.svg';
+            $response = [
+                'result' => $item,
+                'products' => $products->paginate(),
+                'total' => $products->count(),
+                'banner' => null,
+                'template' => 'products',
+                'breadcrumb' => [
+                    ['link' => '', 'label' => \trans('nksoft::common.Home')],
+                    ['active' => true, 'link' => '#', 'label' => $item['text']],
+                ],
+                'seo' => [
+                    'title' => $item['text'],
+                    'ogDescription' => $item['text'],
+                    'ogUrl' => url($item['slug']),
+                    'ogImage' => url($im),
+                    'ogSiteName' => $item['text'],
+                ],
+            ];
+            return $this->responseViewSuccess($response);
+        } catch (\Exception $e) {
+            return $this->responseError($e->getMessage());
+        }
+
     }
 }
