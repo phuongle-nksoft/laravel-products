@@ -82,7 +82,9 @@ class CustomersController extends WebController
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::users.Username'), 'data' => null, 'class' => 'required', 'type' => 'text'],
+                    ['key' => 'phone', 'label' => trans('nksoft::users.Phone'), 'data' => null, 'type' => 'text'],
                     ['key' => 'email', 'label' => trans('nksoft::users.Email'), 'data' => null, 'class' => 'required', 'type' => 'email'],
+                    ['key' => 'birthday', 'label' => trans('nksoft::users.Birthday'), 'data' => null, 'type' => 'date'],
                     ['key' => 'password', 'label' => trans('nksoft::users.Password'), 'data' => null, 'class' => 'required', 'type' => 'password'],
                     ['key' => 'images', 'label' => trans('nksoft::users.Avatar'), 'type' => 'image'],
                 ],
@@ -100,7 +102,6 @@ class CustomersController extends WebController
         if ($id == 0) {
             $rules['email'] = 'email | unique:customers';
             $rules['password'] = 'required|min:6';
-            $rules['phone'] = 'required';
             $rules['name'] = 'required';
         }
 
@@ -145,7 +146,7 @@ class CustomersController extends WebController
                 $this->setMedia($images, $user->id, $this->module);
             }
             $response = [
-                'user' => $user,
+                'result' => $user,
             ];
             return $this->responseViewSuccess($response, [trans('nksoft::message.Success')]);
         } catch (\Exception $e) {

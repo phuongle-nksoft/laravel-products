@@ -106,6 +106,7 @@ class ProductsController extends WebController
     {
         $categories = Categories::GetListByProduct(array('parent_id' => 0), $result ? $result->categoryProductIndies->pluck('categories_id')->toArray() : [0]);
         $vintages = Vintages::GetListByProduct(array('parent_id' => 0), $result ? $result->vintages->pluck('vintages_id')->toArray() : [0]);
+        $vintagesBanner = Vintages::select('id', 'name')->get();
         $brands = Brands::select(['id', 'name'])->get();
         $regions = Regions::GetListByProduct(array('parent_id' => 0), $result);
         $professional = Professionals::select(['id', 'name'])->get();
@@ -161,7 +162,7 @@ class ProductsController extends WebController
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                     ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'select'],
-                    ['key' => 'vintages_banner_id', 'label' => trans('nksoft::products.Vintages Content'), 'data' => $vintages, 'class' => 'required', 'type' => 'select'],
+                    ['key' => 'vintages_banner_id', 'label' => trans('nksoft::products.Vintages Content'), 'data' => $vintagesBanner, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_id', 'label' => trans('nksoft::products.Vintages Title'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
@@ -181,6 +182,7 @@ class ProductsController extends WebController
                     ['key' => 'unit', 'label' => trans('nksoft::products.Unit'), 'data' => $units, 'type' => 'select'],
                     ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'class' => 'required', 'type' => 'number'],
                     ['key' => 'alcohol_content', 'label' => trans('nksoft::common.Alcohol Content'), 'data' => null, 'type' => 'number'],
+                    ['key' => 'scarce', 'label' => 'Rượu Hiếm Có', 'data' => null, 'type' => 'checkbox'],
                     ['key' => 'volume', 'label' => trans('nksoft::common.Volume'), 'data' => $volume, 'type' => 'text'],
                     ['key' => 'smell', 'label' => trans('nksoft::products.Product Detail'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'editor'],
                     ['key' => 'rate', 'label' => trans('nksoft::common.Rate'), 'data' => null, 'class' => 'col-12 col-lg-4', 'type' => 'number'],
@@ -647,6 +649,10 @@ class ProductsController extends WebController
     {
         try {
             $user = session('user');
+            if (!$user) {
+                $user = Customers::where(['email' => 'khachonline@gmail.com'])->first();
+            }
+
             $rules = [
                 'products_id' => 'required',
                 'description' => 'required',
@@ -656,7 +662,7 @@ class ProductsController extends WebController
                 'description' => __('nksoft::message.Field is require!', ['Field' => trans('nksoft::common.Content')]),
             ];
             $validator = Validator($request->all(), $rules, $messages);
-            if ($validator->fails() || !$user) {
+            if ($validator->fails()) {
                 return $this->responseError($validator->errors());
             }
             $productId = $request->get('products_id');
@@ -739,5 +745,10 @@ class ProductsController extends WebController
         } catch (\Exception $e) {
             return $this->responseError($e->getMessage());
         }
+    }
+
+    public function filter($slug)
+    {
+        dd($slug);
     }
 }

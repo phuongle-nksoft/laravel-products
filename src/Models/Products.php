@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Products extends NksoftModel
 {
-    const FIELDS = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'vintages_banner_id', 'unit', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'qty', 'rate', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description', 'views', 'type', 'price_contact'];
+    const FIELDS = ['id', 'name', 'regions_id', 'brands_id', 'sku', 'is_active', 'vintages_banner_id', 'unit', 'video_id', 'order_by', 'price', 'special_price', 'alcohol_content', 'smell', 'qty', 'rate', 'scarce', 'year_of_manufacture', 'volume', 'slug', 'description', 'meta_description', 'views', 'type', 'price_contact'];
     protected $table = 'products';
     protected $fillable = self::FIELDS;
 

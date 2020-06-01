@@ -183,8 +183,8 @@ class PromotionsController extends WebController
     {
         try {
             $result = CurrentModel::select($this->formData)->find($id);
-            $result->start_date = $result->start_date ? date('m/d/Y', \strtotime($result->start_date)) : '';
-            $result->expice_date = $result->expice_date ? date('m/d/Y', \strtotime($result->expice_date)) : '';
+            // $result->start_date = $result->start_date ? date('m/d/Y', \strtotime($result->start_date)) : '';
+            // $result->expice_date = $result->expice_date ? date('m/d/Y', \strtotime($result->expice_date)) : '';
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,

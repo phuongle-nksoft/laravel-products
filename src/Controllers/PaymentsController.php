@@ -117,6 +117,7 @@ class PaymentsController extends WebController
             $total = $total - $discount;
         }
         $provinceId = $request->get('provinces_id');
+        $area = $request->get('area');
         $orderData = [
             'shippings_id' => $request->get('shippings_id'),
             'customers_id' => $user->id,
@@ -127,7 +128,7 @@ class PaymentsController extends WebController
             'total' => $total,
             'order_id' => bin2hex(random_bytes(4)),
             'price_contact' => $price_contact ? 1 : 0,
-            'area' => $request->get('area'),
+            'area' => $area,
         ];
         if ($price_contact || !in_array($provinceId, [1, 50, 32]) || true) {
             $order = Orders::create($orderData);
@@ -148,7 +149,12 @@ class PaymentsController extends WebController
                 OrderDetails::insert($dataDetails);
                 $this->resetSession($order);
                 $order = Orders::where(['id' => $order->id])->with(['shipping', 'customer'])->first();
-                Mail::to('marketingwinecellar@gmail.com')->send(new OrderMail($order));
+                $emailSend = [
+                    3 => 'saleMB@ruounhapkhau.com',
+                    2 => 'saleMT@ruounhapkhau.com',
+                    1 => 'saleMN@ruounhapkhau.com',
+                ];
+                Mail::to($emailSend[$area])->cc('leduyphuong64@gmail.com')->send(new OrderMail($order));
                 session(['order' => $order]);
                 return $this->responseViewSuccess(['url' => url('dat-hang-thanh-cong')]);
             }

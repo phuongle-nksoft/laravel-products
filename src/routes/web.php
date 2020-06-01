@@ -55,6 +55,7 @@ Route::group(['middleware' => 'web'], function () {
 Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {
     Route::get('categories/{id}', 'CategoriesController@show')->name('categories');
     Route::get('products/{id}', 'ProductsController@show')->name('products');
+    Route::get('filter/{slug}', 'ProductsController@filter')->name('products.filter');
     Route::get('brands/{id}', 'BrandsController@show')->name('brands');
     Route::get('regions/{id}', 'RegionsController@show')->name('regions');
     Route::get('vintages/{id}', 'VintagesController@show')->name('vintages');

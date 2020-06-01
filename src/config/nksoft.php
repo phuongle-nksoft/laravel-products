@@ -23,4 +23,14 @@ return [
         ['id' => 3, 'name' => trans('nksoft::products.Beer')],
         ['id' => 4, 'name' => trans('nksoft::products.Other')],
     ],
+    'sortCustom' => [
+        ['id' => 1, 'name' => 'Rươu điểm cao', 'type' => 'professional', 'slug' => 'ruou-diem-cao'],
+        ['id' => 2, 'name' => 'Rượu 100 điểm', 'type' => 'professional', 'slug' => 'ruou-100-diem'],
+        ['id' => 3, 'name' => 'Rượu từ 90 điểm', 'type' => 'professional', 'slug' => 'ruou-tu-90-diem'],
+        ['id' => 4, 'name' => 'Rượu cỡ lớn', 'type' => 'products', 'slug' => 'ruou-co-lon'],
+        ['id' => 5, 'name' => 'Chai 1.5L', 'type' => 'products', 'slug' => 'chai-1-5-l'],
+        ['id' => 6, 'name' => 'Chai 3L', 'type' => 'products', 'slug' => 'chai-3-l'],
+        ['id' => 7, 'name' => 'Chai lớn đặt biệt', 'type' => 'products', 'slug' => 'chai-lon-dat-biet'],
+        ['id' => 8, 'name' => 'Rượu hiếm có', 'type' => 'products', 'slug' => 'ruou-hiem-co'],
+    ],
 ];
