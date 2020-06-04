@@ -97,14 +97,6 @@ class NavigationsTableSeeder extends Seeder
                 'roles_id' => json_encode([1, 3]),
                 'order_by' => 3,
             ],
-            [
-                'title' => 'Payments',
-                'link' => 'payments',
-                'icon' => 'nav-icon fas fa-file-invoice',
-                'is_active' => true,
-                'roles_id' => json_encode([1, 3]),
-                'order_by' => 2,
-            ],
         ];
         $promotion = [
             [

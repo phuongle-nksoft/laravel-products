@@ -46,6 +46,7 @@ class ProductsController extends WebController
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'formatter' => 'number'],
                 ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture()],
+                ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'formatter' => 'number'],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
@@ -542,6 +543,7 @@ class ProductsController extends WebController
             $this->formData = \array_merge($this->formData, $this->mergFields);
             $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
             $result->vintages_id = $result->vintages->pluck('vintages_id')->toArray();
+            $result->tags = $result->productTags->pluck('tags_id')->toArray();
             // set optional to product
             $optional = $result->productOptional;
             if ($optional) {

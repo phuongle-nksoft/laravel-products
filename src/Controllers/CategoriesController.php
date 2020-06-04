@@ -9,6 +9,7 @@ use Nksoft\Products\Models\Categories as CurrentModel;
 use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\ProfessionalRatings;
+use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\VintagesProductIndex;
 
 class CategoriesController extends WebController
@@ -205,7 +206,11 @@ class CategoriesController extends WebController
     {
         try {
             $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'page_template', 'type'])->with(['images'])->where(['id' => $id])->first();
-            $listIds = CurrentModel::GetListIds(['id' => $id]);
+            if (in_array($id, [11])) {
+                $listIds = CurrentModel::where(['type' => 1, 'is_active' => 1])->pluck('id')->toArray();
+            } else {
+                $listIds = CurrentModel::GetListIds(['id' => $id]);
+            }
             if (!$result) {
                 return $this->responseError('404');
             }
@@ -224,6 +229,11 @@ class CategoriesController extends WebController
                 $products = $products->whereIn('id', function ($query) use ($categoryId) {
                     $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
                 });
+            }
+            if (isset($allRequest['rg'])) {
+                $provinceId = $allRequest['rg'];
+                $regionId = Regions::GetListIds(['id' => $provinceId]);
+                $products = $products->whereIn('regions_id', $regionId);
             }
             if (isset($allRequest['r'])) {
                 $regionId = $allRequest['r'];

@@ -8,6 +8,7 @@ use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Models\CategoryProductsIndex;
 use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\ProfessionalRatings;
+use Nksoft\Products\Models\Regions;
 use Nksoft\Products\Models\Regions as CurrentModel;
 use Nksoft\Products\Models\VintagesProductIndex;
 
@@ -214,6 +215,11 @@ class RegionsController extends WebController
                 $products = $products->whereIn('id', function ($query) use ($categoryId) {
                     $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
                 });
+            }
+            if (isset($allRequest['rg'])) {
+                $provinceId = $allRequest['rg'];
+                $regionId = Regions::GetListIds(['id' => $provinceId]);
+                $products = $products->whereIn('regions_id', $regionId);
             }
             if (isset($allRequest['r'])) {
                 $regionId = $allRequest['r'];

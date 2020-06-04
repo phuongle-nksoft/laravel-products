@@ -23,7 +23,7 @@ class Promotions extends NksoftModel
                     'selected' => in_array($item->id, $idSelected) ? true : false,
                 );
                 $data[] = array(
-                    'name' => $item->name,
+                    'name' => $item->name . ' ' . $item->year_of_manufacture,
                     'icon' => 'fas fa-folder',
                     'id' => $item->id,
                     'state' => $selected,

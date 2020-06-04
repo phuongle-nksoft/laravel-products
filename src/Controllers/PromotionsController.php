@@ -27,6 +27,8 @@ class PromotionsController extends WebController
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'discount_amount', 'label' => trans('nksoft::products.Discount Amount')],
+                ['key' => 'start_date', 'label' => trans('nksoft::products.From Date')],
+                ['key' => 'expice_date', 'label' => trans('nksoft::products.To Date')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = collect($columns)->pluck('key')->toArray();
@@ -183,8 +185,6 @@ class PromotionsController extends WebController
     {
         try {
             $result = CurrentModel::select($this->formData)->find($id);
-            // $result->start_date = $result->start_date ? date('m/d/Y', \strtotime($result->start_date)) : '';
-            // $result->expice_date = $result->expice_date ? date('m/d/Y', \strtotime($result->expice_date)) : '';
             $response = [
                 'formElement' => $this->formElement($result),
                 'result' => $result,
