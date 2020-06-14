@@ -26,4 +26,8 @@ class Customers extends NksoftModel
     {
         return $this->hasMany(Wishlists::class, 'customers_id')->with('products');
     }
+    public function notifications()
+    {
+        return $this->hasMany(Notifications::class, 'customers_id')->orderBy('updated_at', 'desc');
+    }
 }

@@ -167,7 +167,6 @@ class ProductsController extends WebController
                     ['key' => 'vintages_id', 'label' => trans('nksoft::products.Vintages Title'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],
                     ['key' => 'regions_id', 'label' => trans('nksoft::common.regions'), 'data' => $regions, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'brands_id', 'label' => trans('nksoft::common.brands'), 'data' => $brands, 'class' => 'required', 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
             ],
@@ -212,6 +211,14 @@ class ProductsController extends WebController
                     ['key' => 'optionals_banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'optionals_images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                     ['key' => 'optionals_delete', 'label' => trans('nksoft::common.Button.Delete'), 'data' => null, 'type' => 'checkbox'],
+                ],
+            ],
+            [
+                'key' => 'seo',
+                'label' => 'SEO',
+                'element' => [
+                    ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
             ],
         ];
@@ -479,34 +486,47 @@ class ProductsController extends WebController
                 ->with($with)->take(3)->get();
 
             //get list other product
-            $listCategoryIds = CategoryProductsIndex::where(['products_id' => $id])->pluck('categories_id');
+            $listCategoryIds = $result->firstCategory()->pluck('categories_id');
             $productInCategory = CurrentModel::whereIn('id', function ($query) use ($listCategoryIds) {
                 $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listCategoryIds)->groupBy('products_id')->pluck('products_id');
-            })->where(['is_active' => 1])
-                ->where('id', '<>', $id)
-                ->orderBy('order_by', 'asc')
+            })->where(['is_active' => 1, 'type' => $result->type])
+                ->where('id', '<>', $id);
+            $price = $result->price;
+            if ($price < 10000000) {
+                $productInCategory = $productInCategory->where('price', '<=', 10000000);
+            }
+            if ($price > 10000000 && $price < 30000000) {
+                $productInCategory = $productInCategory->whereBetween('price', [10000000, 30000000]);
+            }
+            if ($price > 30000000) {
+                $productInCategory = $productInCategory->where('price', '>=', 30000000);
+            }
+            $productInCategory = $productInCategory->orderBy('order_by', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->with($with)
                 ->take(15)->get();
-            $category = $result->categoryProductIndies->first();
             //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
             $image = $result->images()->where(['group_id' => 1])->first();
             $breadcrumb = [
                 ['link' => '', 'label' => \trans('nksoft::common.Home')],
             ];
-            if ($category) {
-                array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
+            $category = $result->categoryProductIndies->first();
+            // if ($category) {
+            //     array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
+            // }
+            if ($result->brands) {
+                array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
             }
-            // if ($result->regions) {
-            //     if ($result->regions->parent) {
-            //         array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
-            //     }
-            //     array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
-            // }
-            // if ($result->brands) {
-            //     array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
-            // }
+            if ($result->regions) {
+                array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
+                if ($result->regions->parent) {
+                    array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
+                }
+            }
+            if ($result->vintageBanner) {
+                array_push($breadcrumb, ['link' => $result->vintageBanner->slug, 'label' => $result->vintageBanner->name]);
+            }
             array_push($breadcrumb, ['active' => true, 'link' => '#', 'label' => $result->name]);
             $response = [
                 'result' => $result,
@@ -517,11 +537,11 @@ class ProductsController extends WebController
                 'template' => 'product-detail',
                 'breadcrumb' => $breadcrumb,
                 'seo' => [
-                    'title' => $result->name,
+                    'title' => $result->meta_title ? $result->meta_title : $result->name,
                     'ogDescription' => $result->meta_description,
                     'ogUrl' => url($category->categories->slug . '/' . $result->slug),
                     'ogImage' => url('storage/' . $image->image),
-                    'ogSiteName' => $result->name,
+                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
                 ],
             ];
             return $this->responseViewSuccess($response);

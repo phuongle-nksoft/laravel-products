@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Mail;
 use Nksoft\Master\Controllers\WebController;
 use Nksoft\Products\Mail\OrderMail;
 use Nksoft\Products\Models\Customers;
+use Nksoft\Products\Models\Notifications;
 use Nksoft\Products\Models\OrderDetails;
 use Nksoft\Products\Models\Orders;
 use Nksoft\Products\Models\Payments as CurrentModel;
@@ -154,6 +155,8 @@ class PaymentsController extends WebController
                     2 => 'saleMT@ruounhapkhau.com',
                     1 => 'saleMN@ruounhapkhau.com',
                 ];
+
+                Notifications::createItem(1, $user->id);
                 Mail::to($emailSend[$area])->cc('leduyphuong64@gmail.com')->send(new OrderMail($order));
                 session(['order' => $order]);
                 return $this->responseViewSuccess(['url' => url('dat-hang-thanh-cong')]);
@@ -278,6 +281,7 @@ class PaymentsController extends WebController
             $order = Orders::where(['id' => $order->id])->with(['shipping'])->first();
             session(['order' => $order]);
             $this->resetSession($order);
+            Notifications::createItem(1, $orderPayment['customers_id']);
             return redirect('dat-hang-thanh-cong');
         } else {
             return redirect('fails');

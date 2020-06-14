@@ -36,6 +36,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('customers/register', 'CustomersController@store');
         Route::get('logout', 'CustomersController@logout');
         Route::get('myWine', 'CustomersController@myWine');
+        Route::get('notifications', 'NotificationController@index');
         Route::post('shippings', 'ShippingsController@store');
         Route::put('shippings/{id}', 'ShippingsController@update');
         Route::delete('shippings/{id}', 'ShippingsController@destroy');

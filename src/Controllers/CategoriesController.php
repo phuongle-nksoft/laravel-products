@@ -109,14 +109,6 @@ class CategoriesController extends WebController
                     ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'page_template', 'label' => trans('nksoft::common.Layout Page'), 'data' => $this->pageTemplate(), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'type' => 'tree'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
-                ],
-                'active' => true,
-            ],
-            [
-                'key' => 'inputForm',
-                'label' => trans('nksoft::common.Content'),
-                'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
@@ -125,6 +117,15 @@ class CategoriesController extends WebController
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                     ['key' => 'maps', 'label' => trans('nksoft::common.Icon'), 'data' => null, 'type' => 'image'],
+                ],
+                'active' => true,
+            ],
+            [
+                'key' => 'seo',
+                'label' => 'SEO',
+                'element' => [
+                    ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
             ],
         ];
@@ -274,11 +275,11 @@ class CategoriesController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => [
-                    'title' => $result->name,
+                    'title' => $result->meta_title ? $result->meta_title : $result->name,
                     'ogDescription' => $result->meta_description,
                     'ogUrl' => url($result->slug),
                     'ogImage' => url($im),
-                    'ogSiteName' => $result->name,
+                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
                 ],
                 'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : ''),
             ];

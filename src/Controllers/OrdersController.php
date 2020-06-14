@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Models\Notifications;
 use Nksoft\Products\Models\Orders as CurrentModel;
 use Nksoft\Products\Models\Products;
 use Nksoft\Products\Models\Promotions;
@@ -241,6 +242,9 @@ class OrdersController extends WebController
                     $item->subtotal = $item->price * $item->qty;
                     $item->save();
                 }
+            }
+            if ($data['status'] != $result->status) {
+                Notifications::createItem($data['status'], $result->customers_id);
             }
             $result->promotion_id = $promotion->id ?? 0;
             $result->discount_code = $promotion->code ?? '';

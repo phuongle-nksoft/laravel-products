@@ -97,14 +97,6 @@ class RegionsController extends WebController
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                     ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.regions'), 'data' => $categories, 'type' => 'select'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
-                ],
-                'active' => true,
-            ],
-            [
-                'key' => 'inputForm',
-                'label' => trans('nksoft::common.Content'),
-                'element' => [
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
@@ -113,6 +105,15 @@ class RegionsController extends WebController
                     ['key' => 'maps', 'label' => trans('nksoft::common.Maps'), 'data' => null, 'type' => 'image'],
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
+                ],
+                'active' => true,
+            ],
+            [
+                'key' => 'inputForm',
+                'label' => 'SEO',
+                'element' => [
+                    ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
             ],
         ];
@@ -266,11 +267,11 @@ class RegionsController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => [
-                    'title' => $result->name,
+                    'title' => $result->meta_title ? $result->meta_title : $result->name,
                     'ogDescription' => $result->meta_description,
                     'ogUrl' => url($result->slug),
                     'ogImage' => url($im),
-                    'ogSiteName' => $result->name,
+                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
                 ],
                 'url' => $this->module . '/' . $result->id,
                 'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'r' : ''),

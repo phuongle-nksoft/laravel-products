@@ -88,10 +88,17 @@ class BrandsController extends WebController
                     ['key' => 'video_id', 'label' => 'Video', 'data' => null, 'type' => 'text'],
                     ['key' => 'banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
-                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
                 'active' => true,
                 'selected' => $result && $result->parent_id == 0,
+            ],
+            [
+                'key' => 'inputForm',
+                'label' => 'SEO',
+                'element' => [
+                    ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
+                    ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
+                ],
             ],
         ];
     }
@@ -182,11 +189,11 @@ class BrandsController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => [
-                    'title' => $result->name,
+                    'title' => $result->meta_title ? $result->meta_title : $result->name,
                     'ogDescription' => $result->meta_description,
                     'ogUrl' => url($result->slug),
                     'ogImage' => url($im),
-                    'ogSiteName' => $result->name,
+                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
                 ],
                 'filter' => $this->listFilter($result->type),
             ];
