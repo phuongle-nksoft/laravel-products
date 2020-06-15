@@ -232,6 +232,16 @@ class PaymentsController extends WebController
     {
         $responseCode = $request->get('vnp_ResponseCode');
         if ($responseCode == '00') {
+            return redirect('dat-hang-thanh-cong');
+        } else {
+            return redirect('fails');
+        }
+    }
+
+    public function save(Request $request, $service)
+    {
+        $responseCode = $request->get('vnp_ResponseCode');
+        if ($responseCode == '00') {
             $orderPayment = session('orderPayment');
             $orderData = [
                 'shippings_id' => $orderPayment['shippings_id'],
@@ -282,7 +292,6 @@ class PaymentsController extends WebController
             session(['order' => $order]);
             $this->resetSession($order);
             Notifications::createItem(1, $orderPayment['customers_id']);
-            return redirect('dat-hang-thanh-cong');
         } else {
             return redirect('fails');
         }

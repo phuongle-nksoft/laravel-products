@@ -43,6 +43,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::get('provinces', 'ShippingsController@getProvinces');
         Route::post('payments', 'PaymentsController@store');
         Route::get('payments/{service}/callback', 'PaymentsController@callback');
+        Route::get('payments/{service}/ipn', 'PaymentsController@save');
         Route::post('addWishlist', 'ProductsController@addWishlist');
         Route::delete('deleteWishlist/{wishlistId}', 'ProductsController@deleteWishlist');
         Route::post('addComment', 'ProductsController@addComment');
