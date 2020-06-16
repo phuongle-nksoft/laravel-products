@@ -511,22 +511,22 @@ class ProductsController extends WebController
             $breadcrumb = [
                 ['link' => '', 'label' => \trans('nksoft::common.Home')],
             ];
-            $category = $result->categoryProductIndies->first();
-            // if ($category) {
-            //     array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
+            $category = $result->firstCategory;
+            if ($category) {
+                array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
+            }
+            // if ($result->brands) {
+            //     array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
             // }
-            if ($result->brands) {
-                array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
-            }
-            if ($result->regions) {
-                array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
-                if ($result->regions->parent) {
-                    array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
-                }
-            }
-            if ($result->vintageBanner) {
-                array_push($breadcrumb, ['link' => $result->vintageBanner->slug, 'label' => $result->vintageBanner->name]);
-            }
+            // if ($result->regions) {
+            //     array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
+            //     if ($result->regions->parent) {
+            //         array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
+            //     }
+            // }
+            // if ($result->vintageBanner) {
+            //     array_push($breadcrumb, ['link' => $result->vintageBanner->slug, 'label' => $result->vintageBanner->name]);
+            // }
             array_push($breadcrumb, ['active' => true, 'link' => '#', 'label' => $result->name]);
             $response = [
                 'result' => $result,

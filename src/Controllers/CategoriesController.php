@@ -206,7 +206,7 @@ class CategoriesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'page_template', 'type'])->with(['images'])->where(['id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'slug', 'page_template', 'type'])->with(['images'])->where(['id' => $id])->first();
             if (in_array($id, [11])) {
                 $listIds = CurrentModel::where(['type' => 1, 'is_active' => 1])->pluck('id')->toArray();
             } else {

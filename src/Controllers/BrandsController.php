@@ -170,7 +170,7 @@ class BrandsController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'type', 'meta_description', 'type', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
+            $result = CurrentModel::select(['description', 'name', 'type', 'slug', 'meta_description', 'type', 'id'])->with(['images'])->where(['is_active' => 1, 'id' => $id])->first();
             if (!$result) {
                 return $this->responseError('404');
             }

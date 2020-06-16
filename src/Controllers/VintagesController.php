@@ -195,7 +195,7 @@ class VintagesController extends WebController
                 $where = ['id' => $id];
             }
 
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'type', 'id'])->with(['images'])->where($where)->first();
+            $result = CurrentModel::select(['description', 'name', 'slug', 'meta_description', 'type', 'id'])->with(['images'])->where($where)->first();
             if (!$result) {
                 return $this->responseError('404');
             }
