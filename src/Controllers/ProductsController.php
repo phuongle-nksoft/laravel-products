@@ -51,10 +51,11 @@ class ProductsController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
-            if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
+            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc');
+            if ($q && $q != 'null') {
+                $results = $results->where('name', 'like', '%' . $q . '%')->get();
             } else {
-                $results = CurrentModel::select($select)->with(['histories'])->orderBy('updated_at', 'desc')->paginate();
+                $results = $results->paginate();
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
@@ -217,6 +218,7 @@ class ProductsController extends WebController
                 'key' => 'seo',
                 'label' => 'SEO',
                 'element' => [
+                    ['key' => 'canonical_link', 'label' => 'Canonical Link', 'data' => null, 'type' => 'text'],
                     ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
@@ -507,7 +509,6 @@ class ProductsController extends WebController
                 ->take(15)->get();
             //update views
             CurrentModel::where(['id' => $id])->update(['views' => $result->views + 1]);
-            $image = $result->images()->where(['group_id' => 1])->first();
             $breadcrumb = [
                 ['link' => '', 'label' => \trans('nksoft::common.Home')],
             ];
@@ -536,13 +537,7 @@ class ProductsController extends WebController
                 'productInCategory' => $productInCategory,
                 'template' => 'product-detail',
                 'breadcrumb' => $breadcrumb,
-                'seo' => [
-                    'title' => $result->meta_title ? $result->meta_title : $result->name,
-                    'ogDescription' => $result->meta_description,
-                    'ogUrl' => url($category->categories->slug . '/' . $result->slug),
-                    'ogImage' => url('storage/' . $image->image),
-                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
-                ],
+                'seo' => $this->SEO($result),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

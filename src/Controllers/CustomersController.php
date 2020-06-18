@@ -36,7 +36,7 @@ class CustomersController extends WebController
             if ($q) {
                 $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
             } else {
-                $results = CurrentModel::select($select)->with(['histories'])->orderBy('updated_at', 'desc')->paginate();
+                $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [

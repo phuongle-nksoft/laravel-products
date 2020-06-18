@@ -35,7 +35,7 @@ class ProductCommentController extends WebController
             if ($q) {
                 $results = $results->where('name', 'like', '%' . $q . '%')->with(['histories', 'product'])->get();
             } else {
-                $results = $results->with(['histories', 'product'])->orderBy('updated_at', 'desc')->paginate();
+                $results = $results->with(['histories', 'product'])->orderBy('created_at', 'desc')->paginate();
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [

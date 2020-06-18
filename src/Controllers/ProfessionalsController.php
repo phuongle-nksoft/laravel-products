@@ -28,7 +28,7 @@ class ProfessionalsController extends WebController
                 ['key' => 'short_name', 'label' => trans('nksoft::common.Short Name')],
             ];
             $select = Arr::pluck($columns, 'key');
-            $results = CurrentModel::select($select)->with(['histories'])->paginate();
+            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,

@@ -34,10 +34,11 @@ class CategoriesController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
-            if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
+            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc');
+            if ($q && $q != 'null') {
+                $results = $results->where('name', 'like', '%' . $q . '%')->get();
             } else {
-                $results = CurrentModel::select($select)->with(['histories'])->paginate();
+                $results = $results->paginate();
             }
 
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
@@ -124,6 +125,7 @@ class CategoriesController extends WebController
                 'key' => 'seo',
                 'label' => 'SEO',
                 'element' => [
+                    ['key' => 'canonical_link', 'label' => 'Canonical Link', 'data' => null, 'type' => 'text'],
                     ['key' => 'meta_title', 'label' => 'Title', 'data' => null, 'type' => 'text'],
                     ['key' => 'meta_description', 'label' => trans('nksoft::common.Meta Description'), 'data' => null, 'type' => 'textarea'],
                 ],
@@ -241,9 +243,9 @@ class CategoriesController extends WebController
                 $products = $products->where(['regions_id' => $regionId]);
             }
             if (isset($allRequest['p'])) {
-                $professionalId = $allRequest['p'];
-                $products = $products->whereIn('id', function ($query) use ($professionalId) {
-                    $query->from(with(new ProfessionalRatings())->getTable())->select(['products_id'])->where('professionals_id', $professionalId)->pluck('products_id');
+                $rating = $allRequest['p'];
+                $products = $products->whereIn('id', function ($query) use ($rating) {
+                    $query->from(with(new ProfessionalRatings())->getTable())->select(['products_id'])->where('ratings', $rating)->pluck('products_id');
                 });
             }
             if (isset($allRequest['v'])) {
@@ -261,8 +263,6 @@ class CategoriesController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
-            $image = $result->images()->first();
-            $im = $image ? 'storage/' . $image->image : 'wine/images/share/logo.svg';
             $allowId = [11];
             $response = [
                 'result' => $result,
@@ -274,13 +274,7 @@ class CategoriesController extends WebController
                     ['link' => '', 'label' => \trans('nksoft::common.Home')],
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
-                'seo' => [
-                    'title' => $result->meta_title ? $result->meta_title : $result->name,
-                    'ogDescription' => $result->meta_description,
-                    'ogUrl' => url($result->slug),
-                    'ogImage' => url($im),
-                    'ogSiteName' => $result->meta_title ? $result->meta_title : $result->name,
-                ],
+                'seo' => $this->SEO($result),
                 'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : ''),
             ];
             return $this->responseViewSuccess($response);
