@@ -270,7 +270,7 @@ class CategoriesController extends WebController
                     return !in_array($item['type'], ['p', 'vg']);
                 });
             }
-            if ($result->id == 18 || $result->parent_id == 18 || $result->type == 2) {
+            if ($result->id == 18 || $result->parent_id == 18 || $result->type != 2) {
                 $listFilter = array_filter($listFilter, function ($item) {
                     return !in_array($item['type'], ['p']);
                 });
