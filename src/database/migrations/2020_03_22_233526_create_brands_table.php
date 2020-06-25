@@ -22,6 +22,8 @@ class CreateBrandsTable extends Migration
             $table->string('video_id')->nullable();
             $table->longText('description')->nullable();
             $table->text('meta_description')->nullable();
+            $table->string('meta_title')->nullable();
+            $table->string('meta_canonical')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

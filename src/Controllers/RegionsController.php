@@ -199,7 +199,7 @@ class RegionsController extends WebController
             if (in_array($id, [69, 70])) {
                 $where = ['id' => $id];
             }
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'type', 'slug'])->with(['images'])->where($where)->first();
+            $result = CurrentModel::select($this->formData)->with(['images'])->where($where)->first();
             if (in_array($id, [69, 70])) {
                 $listIds = CurrentModel::GetListIds(['type' => $result->type, 'is_active' => 1, 'parent_id' => 0]);
             } else {

@@ -16,6 +16,14 @@ class NavigationsTableSeeder extends Seeder
     {
         $products = [
             [
+                'title' => 'Discovery',
+                'link' => 'discoveries',
+                'icon' => 'nav-icon fa fa-cc-discover',
+                'is_active' => true,
+                'roles_id' => json_encode([1, 2]),
+                'order_by' => 1,
+            ],
+            [
                 'title' => 'Brands',
                 'link' => 'brands',
                 'icon' => 'nav-icon fas fa-book-reader',

@@ -35,6 +35,8 @@ class CreateProductsTable extends Migration
             $table->string('slug')->unique();
             $table->string('video_id')->nullable();
             $table->text('meta_description')->nullable();
+            $table->string('meta_title')->nullable();
+            $table->string('meta_canonical')->nullable();
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('regions_id', 'products_regions_id_foreign')->references('id')->on('regions')->onDelete('cascade');

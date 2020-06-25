@@ -23,6 +23,13 @@ return [
         ['id' => 3, 'name' => trans('nksoft::products.Beer')],
         ['id' => 4, 'name' => trans('nksoft::products.Other')],
     ],
+    'conditionFilter' => [
+        ['id' => 1, 'name' => 'Lớn hơn'],
+        ['id' => 2, 'name' => 'Nhỏ hơn'],
+        ['id' => 3, 'name' => 'Bằng'],
+        ['id' => 4, 'name' => 'Lớn hơn hoặc bằng'],
+        ['id' => 5, 'name' => 'Nhỏ hơn hoặc bằng'],
+    ],
     'filterCustom' => [
         ['id' => 1, 'text' => 'Rươu điểm cao', 'type' => 'professional', 'slug' => 'ruou-diem-cao', 'key' => 'ratings', 'value' => 90, 'condition' => 'gt'],
         ['id' => 2, 'text' => 'Rượu 100 điểm', 'type' => 'professional', 'slug' => 'ruou-100-diem', 'key' => 'ratings', 'value' => 100],

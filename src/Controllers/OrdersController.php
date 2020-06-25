@@ -267,55 +267,64 @@ class OrdersController extends WebController
      */
     public function addCart(Request $request)
     {
-        $validator = Validator::make($request->all(), ['qty' => 'required', 'productId' => 'required']);
-        if ($validator->fails()) {
-            return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
-        }
-        $qty = $request->get('qty');
-        $select = ['id', 'name', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug', 'price_contact'];
-        $with = ['images', 'vintages', 'brands', 'regions', 'professionalsRating'];
-        $product = Products::select($select)->where(['id' => $request->get('productId'), 'is_active' => 1])->with($with)->first();
-        if (!$product) {
-            return \response()->json(['status' => 'error', 'message' => '404']);
+        $newCartItems = array();
+        if ($request->get('items')) {
+            $newCartItems = $request->get('items');
+        } else {
+            $validator = Validator::make($request->all(), ['qty' => 'required', 'productId' => 'required']);
+            if ($validator->fails()) {
+                return \response()->json(['status' => 'error', 'message' => $validator->errors()]);
+            }
+            $newCartItems = array(['productId' => $request->get('productId'), 'qty' => $request->get('qty')]);
         }
         $allCarts = $request->session()->get(config('nksoft.addCart')) ?? [];
-        $subtotal = $product->special_price ? $product->special_price * $qty : $product->price * $qty;
-        $promotion = session('discount');
-
-        $itemCart = array(
-            'rowId' => md5(time()),
-            'qty' => $qty,
-            'product_id' => $product->id,
-            'subtotal' => $subtotal,
-            'name' => $product->name,
-            'price' => $product->price,
-            'special_price' => $product->special_price,
-            'images' => $product->images()->first(),
-            'professionals_rating' => $product->professionalsRating,
-            'vintages' => $product->vintages,
-            'regions' => $product->regions,
-            'brands' => $product->brands,
-            'slug' => $product->slug,
-            'discount' => 0,
-            'price_contact' => $product->price_contact,
-        );
-        if (!$allCarts) {
-            $allCarts = [];
-            array_push($allCarts, $itemCart);
-        } else {
-            $existsItem = collect($allCarts)->firstWhere('product_id', $product->id);
-            if (!$existsItem) {
+        $select = ['id', 'name', 'regions_id', 'brands_id', 'is_active', 'price', 'special_price', 'slug', 'price_contact'];
+        $with = ['images', 'vintages', 'brands', 'regions', 'professionalsRating'];
+        $productIds = collect($newCartItems)->pluck('productId')->toArray();
+        if (count($productIds) == 0) {
+            return \response()->json(['status' => 'error', 'message' => '404']);
+        }
+        $products = Products::select($select)->whereIn('id', $productIds)->where(['is_active' => 1])->with($with)->get();
+        foreach ($products as $product) {
+            $qty = collect($newCartItems)->firstWhere('productId', $product->id)['qty'];
+            $subtotal = $product->special_price ? $product->special_price * $qty : $product->price * $qty;
+            $itemCart = array(
+                'rowId' => md5(random_bytes(20)),
+                'qty' => $qty,
+                'product_id' => $product->id,
+                'subtotal' => $subtotal,
+                'name' => $product->name,
+                'price' => $product->price,
+                'special_price' => $product->special_price,
+                'images' => $product->images()->first(),
+                'professionals_rating' => $product->professionalsRating,
+                'vintages' => $product->vintages,
+                'regions' => $product->regions,
+                'brands' => $product->brands,
+                'slug' => $product->slug,
+                'discount' => 0,
+                'price_contact' => $product->price_contact,
+            );
+            if (!$allCarts) {
+                $allCarts = [];
                 array_push($allCarts, $itemCart);
             } else {
-                foreach ($allCarts as $key => $item) {
-                    if ($item['product_id'] == $product->id) {
-                        $allCarts[$key]['qty'] += $qty;
-                        $sbt = $product->special_price ? $product->special_price * $allCarts[$key]['qty'] : $product->price * $allCarts[$key]['qty'];
-                        $allCarts[$key]['subtotal'] = $sbt;
+                $existsItem = collect($allCarts)->firstWhere('product_id', $product->id);
+                if (!$existsItem) {
+                    array_push($allCarts, $itemCart);
+                } else {
+                    foreach ($allCarts as $key => $item) {
+                        if ($item['product_id'] == $product->id) {
+                            $allCarts[$key]['qty'] += $qty;
+                            $sbt = $product->special_price ? $product->special_price * $allCarts[$key]['qty'] : $product->price * $allCarts[$key]['qty'];
+                            $allCarts[$key]['subtotal'] = $sbt;
+                        }
                     }
                 }
             }
         }
+
+        $promotion = session('discount');
         if ($allCarts && $promotion) {
             $allCarts = $this->calcDiscount($allCarts, $promotion);
         }

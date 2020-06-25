@@ -208,8 +208,9 @@ class CategoriesController extends WebController
     public function show($id)
     {
         try {
-            $result = CurrentModel::select(['description', 'name', 'meta_description', 'id', 'slug', 'page_template', 'type'])->with(['images'])->where(['id' => $id])->first();
-            if (in_array($id, [11])) {
+            $allowId = [11];
+            $result = CurrentModel::select($this->formData)->with(['images'])->where(['id' => $id])->first();
+            if (in_array($id, $allowId)) {
                 $listIds = CurrentModel::where(['type' => 1, 'is_active' => 1])->pluck('id')->toArray();
             } else {
                 $listIds = CurrentModel::GetListIds(['id' => $id]);
@@ -263,7 +264,17 @@ class CategoriesController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
-            $allowId = [11];
+            $listFilter = $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : '');
+            if ($result->id == 7) {
+                $listFilter = array_filter($listFilter, function ($item) {
+                    return !in_array($item['type'], ['p', 'vg']);
+                });
+            }
+            if ($result->id == 18 || $result->parent_id == 18 || $result->type == 2) {
+                $listFilter = array_filter($listFilter, function ($item) {
+                    return !in_array($item['type'], ['p']);
+                });
+            }
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -275,7 +286,7 @@ class CategoriesController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => $this->SEO($result),
-                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : ''),
+                'filter' => $listFilter,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

@@ -10,7 +10,9 @@ use Nksoft\Master\Models\Settings;
 use Nksoft\Products\Models\Brands;
 use Nksoft\Products\Models\Categories;
 use Nksoft\Products\Models\CategoryProductsIndex;
+use Nksoft\Products\Models\ChildProducts;
 use Nksoft\Products\Models\Customers;
+use Nksoft\Products\Models\Discovery;
 use Nksoft\Products\Models\ProductComments;
 use Nksoft\Products\Models\ProductOptional;
 use Nksoft\Products\Models\Products as CurrentModel;
@@ -30,7 +32,7 @@ class ProductsController extends WebController
     protected $module = 'products';
 
     protected $excFields = ['images', 'categories_id', 'id', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner', 'optionals_delete'];
-    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner', 'optionals_delete'];
+    protected $mergFields = ['images', 'categories_id', 'professionals_rating', 'tags', 'vintages_id', 'optionals_name', 'optionals_id', 'optionals_description', 'optionals_video', 'optionals_images', 'optionals_banner', 'optionals_delete', 'product_ids'];
 
     protected $model = CurrentModel::class;
     /**
@@ -156,6 +158,8 @@ class ProductsController extends WebController
             ['id' => 1, 'name' => 'Chiếc'],
             ['id' => 2, 'name' => 'Bộ'],
         ];
+        $productIds = $result && $result->product_ids ? $result->product_ids : [];
+        $products = CurrentModel::GetListProducts($productIds);
         return [
             [
                 'key' => 'general',
@@ -212,6 +216,13 @@ class ProductsController extends WebController
                     ['key' => 'optionals_banner', 'label' => trans('nksoft::common.Banner'), 'data' => null, 'type' => 'image'],
                     ['key' => 'optionals_images', 'label' => trans('nksoft::common.Images'), 'data' => null, 'type' => 'image'],
                     ['key' => 'optionals_delete', 'label' => trans('nksoft::common.Button.Delete'), 'data' => null, 'type' => 'checkbox'],
+                ],
+            ],
+            [
+                'key' => 'products',
+                'label' => trans('nksoft::common.products'),
+                'element' => [
+                    ['key' => 'product_ids', 'label' => trans('nksoft::common.products'), 'data' => $products, 'multiple' => true, 'type' => 'tree'],
                 ],
             ],
             [
@@ -292,6 +303,7 @@ class ProductsController extends WebController
             $this->setVintagesProductsIndex($request, $result);
             $this->setTags($request, $result);
             $this->setOptionals($request, $result);
+            $this->setChildProduct($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -443,6 +455,28 @@ class ProductsController extends WebController
 
     }
 
+    public function setChildProduct($request, $result)
+    {
+        $productIds = \json_decode($request->get('product_ids'));
+        if (!is_array($productIds)) {
+            $productIds = array($productIds);
+        }
+
+        /** Delete record by category id not in list */
+        ChildProducts::where(['parent_id' => $result->id])->whereNotIn('child_id', $productIds)->forceDelete();
+
+        /** Save new record */
+        if (count($productIds) > 0) {
+            foreach ($productIds as $id) {
+                $data = [
+                    'parent_id' => $result->id,
+                    'child_id' => $id,
+                ];
+                ChildProducts::updateOrCreate(['parent_id' => $result->id, 'child_id' => $id], $data);
+            }
+        }
+    }
+
     /**
      * Display the specified resource.
      *
@@ -453,7 +487,7 @@ class ProductsController extends WebController
     {
         try {
             $select = CurrentModel::FIELDS;
-            $with = ['images', 'firstCategory', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner', 'productOptional'];
+            $with = ['images', 'firstCategory', 'vintages', 'brands', 'regions', 'professionalsRating', 'vintageBanner', 'productOptional', 'childProducts'];
             $result = CurrentModel::where(['is_active' => 1, 'id' => $id])
                 ->select($select)
                 ->with($with)->first();
@@ -516,18 +550,6 @@ class ProductsController extends WebController
             if ($category) {
                 array_push($breadcrumb, ['link' => $category->categories->slug, 'label' => $category->categories->name]);
             }
-            // if ($result->brands) {
-            //     array_push($breadcrumb, ['link' => $result->brands->slug, 'label' => $result->brands->name]);
-            // }
-            // if ($result->regions) {
-            //     array_push($breadcrumb, ['link' => $result->regions->slug, 'label' => $result->regions->name]);
-            //     if ($result->regions->parent) {
-            //         array_push($breadcrumb, ['link' => $result->regions->parent->slug, 'label' => $result->regions->parent->name]);
-            //     }
-            // }
-            // if ($result->vintageBanner) {
-            //     array_push($breadcrumb, ['link' => $result->vintageBanner->slug, 'label' => $result->vintageBanner->name]);
-            // }
             array_push($breadcrumb, ['active' => true, 'link' => '#', 'label' => $result->name]);
             $response = [
                 'result' => $result,
@@ -554,11 +576,12 @@ class ProductsController extends WebController
     public function edit($id)
     {
         try {
-            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating', 'vintages', 'productOptional'])->find($id);
+            $result = CurrentModel::select($this->formData)->with(['images', 'categoryProductIndies', 'professionalsRating', 'vintages', 'productOptional', 'childProducts'])->find($id);
             $this->formData = \array_merge($this->formData, $this->mergFields);
             $result->categories_id = $result->categoryProductIndies->pluck('categories_id')->toArray();
             $result->vintages_id = $result->vintages->pluck('vintages_id')->toArray();
             $result->tags = $result->productTags->pluck('tags_id')->toArray();
+            $result->product_ids = $result->childProducts->pluck('child_id')->toArray();
             // set optional to product
             $optional = $result->productOptional;
             if ($optional) {
@@ -621,6 +644,7 @@ class ProductsController extends WebController
             $this->setTags($request, $result);
             $this->setVintagesProductsIndex($request, $result);
             $this->setOptionals($request, $result);
+            $this->setChildProduct($request, $result);
             if ($request->hasFile('images')) {
                 $images = $request->file('images');
                 $this->setMedia($images, $result->id, $this->module);
@@ -767,24 +791,54 @@ class ProductsController extends WebController
     public function filter($slug)
     {
         try {
-            $filter = config('nksoft.filterCustom');
-            $item = collect($filter)->firstWhere('slug', $slug);
+            $result = Discovery::where(['slug' => $slug, 'is_active' => 1])->with(['images'])->first();
             $productId = [];
-            if ($item['type'] == 'professional') {
-                $productId = ProfessionalRatings::select(['products_id'])->where($item['key'], '>=', $item['value'])->groupBy('products_id')->pluck('products_id');
+            if ($result->type == 'professional') {
+                $productId = ProfessionalRatings::select(['products_id'])->where($result->key, '>=', $result->value)->groupBy('products_id')->pluck('products_id');
             }
             $products = CurrentModel::where(['is_active' => 1, 'type' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             if (count($productId) > 0) {
                 $products = $products->whereIn('id', $productId);
             }
-            if ($item['type'] == 'products') {
-                if (isset($item['condition']) && $item['condition'] == 'gt') {
-                    $products = $products->where($item['key'], '>=', $item['value']);
+            if ($result->type == 'products') {
+                if (isset($result->condition) && $result->condition == 'gt') {
+                    $products = $products->where($result->key, '>=', $result->value);
                 } else {
-                    $products = $products->where($item['key'], $item['value']);
+                    $products = $products->where($result->key, $result->value);
                 }
             }
             $allRequest = request()->all();
+            if (isset($allRequest['vg'])) {
+                $vingateId = $allRequest['vg'];
+                $products = $products->whereIn('id', function ($query) use ($vingateId) {
+                    $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->where('vintages_id', $vingateId)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['c'])) {
+                $categoryId = $allRequest['c'];
+                $products = $products->whereIn('id', function ($query) use ($categoryId) {
+                    $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->where('categories_id', $categoryId)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['rg'])) {
+                $provinceId = $allRequest['rg'];
+                $regionId = Regions::GetListIds(['id' => $provinceId]);
+                $products = $products->whereIn('regions_id', $regionId);
+            }
+            if (isset($allRequest['r'])) {
+                $regionId = $allRequest['r'];
+                $products = $products->where(['regions_id' => $regionId]);
+            }
+            if (isset($allRequest['p'])) {
+                $rating = $allRequest['p'];
+                $products = $products->whereIn('id', function ($query) use ($rating) {
+                    $query->from(with(new ProfessionalRatings())->getTable())->select(['products_id'])->where('ratings', $rating)->pluck('products_id');
+                });
+            }
+            if (isset($allRequest['v'])) {
+                $volume = $allRequest['v'];
+                $products = $products->where(['volume' => $volume]);
+            }
             if (isset($allRequest['sort'])) {
                 $sort = $allRequest['sort'];
                 $condition = explode('-', $sort);
@@ -796,24 +850,18 @@ class ProductsController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
-            $im = 'wine/images/share/logo.svg';
             $response = [
-                'result' => $item,
+                'result' => $result,
                 'products' => $products->paginate(),
                 'total' => $products->count(),
-                'banner' => null,
+                'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',
                 'breadcrumb' => [
                     ['link' => '', 'label' => \trans('nksoft::common.Home')],
-                    ['active' => true, 'link' => '#', 'label' => $item['text']],
+                    ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
-                'seo' => [
-                    'title' => $item['text'],
-                    'ogDescription' => $item['text'],
-                    'ogUrl' => url($item['slug']),
-                    'ogImage' => url($im),
-                    'ogSiteName' => $item['text'],
-                ],
+                'seo' => $this->SEO($result),
+                'filter' => $this->listFilter(1),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

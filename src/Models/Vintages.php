@@ -6,7 +6,7 @@ use Nksoft\Master\Models\NksoftModel;
 
 class Vintages extends NksoftModel
 {
-    const FIELDS = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'type', 'meta_title', 'meta_description'];
+    const FIELDS = ['id', 'name', 'parent_id', 'is_active', 'order_by', 'slug', 'description', 'video_id', 'type', 'meta_title', 'meta_description', 'canonical_link'];
     protected $table = 'vintages';
     protected $fillable = self::FIELDS;
 
