@@ -44,12 +44,14 @@ class ProductsController extends WebController
     {
         try {
             $columns = [
+                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'formatter' => 'number'],
                 ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture()],
                 ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'formatter' => 'number'],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -458,12 +460,18 @@ class ProductsController extends WebController
     public function setChildProduct($request, $result)
     {
         $productIds = \json_decode($request->get('product_ids'));
+        if (!$productIds) {
+            $productIds = array();
+        }
+
         if (!is_array($productIds)) {
             $productIds = array($productIds);
         }
-
         /** Delete record by category id not in list */
         ChildProducts::where(['parent_id' => $result->id])->whereNotIn('child_id', $productIds)->forceDelete();
+        if (count($productIds) == 0) {
+            return;
+        }
 
         /** Save new record */
         if (count($productIds) > 0) {
@@ -792,17 +800,21 @@ class ProductsController extends WebController
     {
         try {
             $result = Discovery::where(['slug' => $slug, 'is_active' => 1])->with(['images'])->first();
+            if (!$result) {
+                return $this->responseError('404');
+            }
+            $condition = collect(config('nksoft.conditionFilter'))->firstWhere('id', $result->condition);
             $productId = [];
             if ($result->type == 'professional') {
-                $productId = ProfessionalRatings::select(['products_id'])->where($result->key, '>=', $result->value)->groupBy('products_id')->pluck('products_id');
+                $productId = ProfessionalRatings::select(['products_id'])->where($result->key, $condition['condition'], $result->value)->groupBy('products_id')->pluck('products_id');
             }
             $products = CurrentModel::where(['is_active' => 1, 'type' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             if (count($productId) > 0) {
                 $products = $products->whereIn('id', $productId);
             }
             if ($result->type == 'products') {
-                if (isset($result->condition) && $result->condition == 'gt') {
-                    $products = $products->where($result->key, '>=', $result->value);
+                if ($result->condition) {
+                    $products = $products->where($result->key, $condition['condition'], $result->value);
                 } else {
                     $products = $products->where($result->key, $result->value);
                 }
@@ -861,7 +873,7 @@ class ProductsController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => $this->SEO($result),
-                'filter' => $this->listFilter(1),
+                'filter' => $this->listFilter(1, $products),
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

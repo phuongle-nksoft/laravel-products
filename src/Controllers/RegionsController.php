@@ -28,9 +28,11 @@ class RegionsController extends WebController
     {
         try {
             $columns = [
+                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -209,7 +211,7 @@ class RegionsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['is_active' => 1, 'type' => $result->type])->whereIn('regions_id', $listIds)
+            $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)->orderBy('order_by', 'asc')
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['c'])) {
@@ -255,6 +257,12 @@ class RegionsController extends WebController
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
             $allowId = [69, 5];
+            $listFilter = $this->listFilter($result->type, $products, !in_array($id, $allowId) ? 'r' : '');
+            if ($result->type != 1) {
+                $listFilter = array_filter($listFilter, function ($item) {
+                    return !in_array($item['type'], ['p']);
+                });
+            }
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -267,7 +275,7 @@ class RegionsController extends WebController
                 ],
                 'seo' => $this->SEO($result),
                 'url' => $this->module . '/' . $result->id,
-                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'r' : ''),
+                'filter' => $listFilter,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

@@ -24,11 +24,11 @@ return [
         ['id' => 4, 'name' => trans('nksoft::products.Other')],
     ],
     'conditionFilter' => [
-        ['id' => 1, 'name' => 'Lớn hơn'],
-        ['id' => 2, 'name' => 'Nhỏ hơn'],
-        ['id' => 3, 'name' => 'Bằng'],
-        ['id' => 4, 'name' => 'Lớn hơn hoặc bằng'],
-        ['id' => 5, 'name' => 'Nhỏ hơn hoặc bằng'],
+        ['id' => 1, 'name' => 'Lớn hơn', 'condition' => '<'],
+        ['id' => 2, 'name' => 'Nhỏ hơn', 'condition' => '>'],
+        ['id' => 3, 'name' => 'Bằng', 'condition' => '='],
+        ['id' => 4, 'name' => 'Lớn hơn hoặc bằng', 'condition' => '>='],
+        ['id' => 5, 'name' => 'Nhỏ hơn hoặc bằng', 'condition' => '<='],
     ],
     'filterCustom' => [
         ['id' => 1, 'text' => 'Rươu điểm cao', 'type' => 'professional', 'slug' => 'ruou-diem-cao', 'key' => 'ratings', 'value' => 90, 'condition' => 'gt'],
@@ -39,5 +39,13 @@ return [
         ['id' => 6, 'text' => 'Chai 3L', 'type' => 'products', 'slug' => 'chai-3-l', 'key' => 'volume', 'value' => 3000],
         ['id' => 7, 'text' => 'Chai lớn đặt biệt', 'type' => 'products', 'slug' => 'chai-lon-dat-biet', 'key' => 'volume', 'value' => 3000, 'condition' => 'gt'],
         ['id' => 8, 'text' => 'Rượu hiếm có', 'type' => 'products', 'slug' => 'ruou-hiem-co', 'key' => 'scarce', 'value' => 1],
+    ],
+    'filterAttributes' => [
+        ['id' => 1, 'name' => 'Theo loại', 'param' => 'c'],
+        ['id' => 2, 'name' => 'Theo vùng', 'param' => 'r'],
+        ['id' => 3, 'name' => 'Theo giống', 'param' => 'vg'],
+        ['id' => 4, 'name' => 'Theo nước', 'param' => 'rg'],
+        ['id' => 5, 'name' => 'Theo điểm rượu', 'param' => 'p'],
+        ['id' => 6, 'name' => 'Theo dung tích', 'param' => 'v'],
     ],
 ];

@@ -142,6 +142,9 @@ class PromotionsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            if (!$data['is_active']) {
+                $data['is_active'] = 0;
+            }
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;
             }
@@ -221,6 +224,10 @@ class PromotionsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            if (!$data['is_active']) {
+                $data['is_active'] = 0;
+            }
+
             // if ($data['product_ids']) $data['product_ids'] = $data['product_ids'];
             if (!$data['coupon_type']) {
                 $data['coupon_type'] = 0;

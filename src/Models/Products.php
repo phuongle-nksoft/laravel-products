@@ -22,7 +22,7 @@ class Products extends NksoftModel
 
     public function vintages()
     {
-        return $this->hasMany(VintagesProductIndex::class, 'products_id')->where('vintages_id', '<>', 35)->with(['vintages']);
+        return $this->hasMany(VintagesProductIndex::class, 'products_id')->with(['vintages']);
     }
 
     public function vintageBanner()

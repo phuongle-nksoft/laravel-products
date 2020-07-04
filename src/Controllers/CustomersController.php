@@ -30,6 +30,7 @@ class CustomersController extends WebController
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'phone', 'label' => trans('nksoft::common.Phone')],
                 ['key' => 'email', 'label' => trans('nksoft::users.Email')],
+                ['key' => 'birthday', 'label' => trans('nksoft::users.Birthday')],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');

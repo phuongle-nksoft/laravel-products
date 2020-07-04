@@ -28,9 +28,11 @@ class BrandsController extends WebController
     {
         try {
             $columns = [
+                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -85,7 +87,7 @@ class BrandsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $status, 'type' => 'select'],
-                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
                     ['key' => 'order_by', 'label' => trans('nksoft::common.Order By'), 'data' => null, 'type' => 'number'],
@@ -180,7 +182,7 @@ class BrandsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['brands_id' => $id, 'is_active' => 1, 'type' => $result->type])
+            $products = Products::where(['brands_id' => $id, 'is_active' => 1])
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating'])->orderBy('price', 'asc');
             $allRequest = request()->all();
             if (isset($allRequest['vg'])) {
@@ -225,6 +227,12 @@ class BrandsController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
+            $listFilter = $this->listFilter($result->type, $products);
+            if ($result->type != 1) {
+                $listFilter = array_filter($listFilter, function ($item) {
+                    return !in_array($item['type'], ['p']);
+                });
+            }
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -236,7 +244,7 @@ class BrandsController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => $this->SEO($result),
-                'filter' => $this->listFilter($result->type),
+                'filter' => $listFilter,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

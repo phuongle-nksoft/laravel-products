@@ -20,6 +20,7 @@ Route::group(['middleware' => 'web'], function () {
             'tags' => WebController::class,
             'comments' => WebController::class,
             'discoveries' => WebController::class,
+            'types' => WebController::class,
         ]);
     });
     Route::group(['namespace' => 'Nksoft\Products\Controllers'], function () {

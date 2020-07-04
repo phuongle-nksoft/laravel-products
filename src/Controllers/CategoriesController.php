@@ -28,9 +28,11 @@ class CategoriesController extends WebController
     {
         try {
             $columns = [
+                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -220,7 +222,7 @@ class CategoriesController extends WebController
             }
             $products = Products::whereIn('id', function ($query) use ($listIds) {
                 $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->pluck('products_id');
-            })->where(['is_active' => 1, 'type' => $result->type])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            })->where(['is_active' => 1])->orderBy('order_by', 'asc')->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['vg'])) {
                 $vingateId = $allRequest['vg'];
@@ -264,17 +266,8 @@ class CategoriesController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
-            $listFilter = $this->listFilter($result->type, !in_array($id, $allowId) ? 'c' : '');
-            if ($result->id == 7) {
-                $listFilter = array_filter($listFilter, function ($item) {
-                    return !in_array($item['type'], ['p', 'vg']);
-                });
-            }
-            if ($result->id == 18 || $result->parent_id == 18 || $result->type != 2) {
-                $listFilter = array_filter($listFilter, function ($item) {
-                    return !in_array($item['type'], ['p']);
-                });
-            }
+            $listFilter = $this->listFilter($result->type, $products, !in_array($id, $allowId) ? 'c' : '');
+
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),

@@ -33,6 +33,7 @@ class OrdersController extends WebController
                 ['key' => 'customers_id', 'label' => trans('nksoft::common.customers'), 'relationship' => 'customer'],
                 ['key' => 'shippings_id', 'label' => trans('nksoft::common.shippings'), 'relationship' => 'shipping', 'childRelationship' => 'provinces'],
                 ['key' => 'total', 'label' => trans('nksoft::products.Total'), 'formatter' => 'number'],
+                ['key' => 'created_at', 'label' => 'Ngày Đặt Hàng', 'formatter' => 'date'],
                 ['key' => 'status', 'label' => trans('nksoft::common.Status'), 'data' => config('nksoft.orderStatus'), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');

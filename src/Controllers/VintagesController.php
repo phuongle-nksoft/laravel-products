@@ -28,9 +28,11 @@ class VintagesController extends WebController
     {
         try {
             $columns = [
+                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
+                ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
@@ -215,7 +217,7 @@ class VintagesController extends WebController
                     $query->from(with(new VintagesProductIndex())->getTable())->select(['products_id'])->whereIn('vintages_id', $listIds)->groupBy('products_id')->pluck('products_id');
                 });
             }
-            $products = $products->where(['is_active' => 1, 'type' => $result->type])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            $products = $products->where(['is_active' => 1])->orderBy('order_by', 'asc')->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['c'])) {
                 $categoryId = $allRequest['c'];
@@ -260,6 +262,12 @@ class VintagesController extends WebController
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
             $allowId = [37];
+            $listFilter = $this->listFilter($result->type, $products, !in_array($id, $allowId) ? 'vg' : '');
+            if ($result->type != 1) {
+                $listFilter = array_filter($listFilter, function ($item) {
+                    return !in_array($item['type'], ['p']);
+                });
+            }
             $response = [
                 'result' => $result,
                 'products' => $products->paginate(),
@@ -271,7 +279,7 @@ class VintagesController extends WebController
                     ['active' => true, 'link' => '#', 'label' => $result->name],
                 ],
                 'seo' => $this->SEO($result),
-                'filter' => $this->listFilter($result->type, !in_array($id, $allowId) ? 'vg' : ''),
+                'filter' => $listFilter,
             ];
             return $this->responseViewSuccess($response);
         } catch (\Exception $e) {

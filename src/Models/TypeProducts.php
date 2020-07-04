@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Nksoft\Products\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Nksoft\Master\Models\NksoftModel;
 
-class TypeProducts extends Model
+class TypeProducts extends NksoftModel
 {
-    //
+    const FIELDS = ['id', 'name', 'is_active', 'filter'];
+    protected $table = 'type_products';
+    protected $fillable = self::FIELDS;
 }
