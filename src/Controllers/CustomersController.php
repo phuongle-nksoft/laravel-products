@@ -33,15 +33,14 @@ class CustomersController extends WebController
                 ['key' => 'birthday', 'label' => trans('nksoft::users.Birthday')],
             ];
             $select = Arr::pluck($columns, 'key');
+            $results = CurrentModel::select($select);
             $q = request()->get('q');
             if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
-            } else {
-                $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
+                $results = $results->where('name', 'like', '%' . $q . '%')->with(['histories'])->get();
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories'])->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),

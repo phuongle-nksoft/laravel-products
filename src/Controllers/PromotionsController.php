@@ -32,7 +32,7 @@ class PromotionsController extends WebController
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
             ];
             $select = collect($columns)->pluck('key')->toArray();
-            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
+            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->get();
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
                 'rows' => $results,
@@ -224,6 +224,10 @@ class PromotionsController extends WebController
                     $data[$item] = $request->get($item);
                 }
             }
+            if (!$data['discount_amount']) {
+                $data['discount_amount'] = 0;
+            }
+
             if (!$data['is_active']) {
                 $data['is_active'] = 0;
             }

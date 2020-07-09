@@ -34,15 +34,13 @@ class DiscoveryController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
-            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc');
+            $results = CurrentModel::select($select);
             if ($q && $q != 'null') {
-                $results = $results->where('name', 'like', '%' . $q . '%')->get();
-            } else {
-                $results = $results->paginate();
+                $results = $results->where('name', 'like', '%' . $q . '%');
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),

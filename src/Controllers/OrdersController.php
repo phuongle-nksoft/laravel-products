@@ -38,7 +38,7 @@ class OrdersController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $userRoles = Auth::user()->role_id;
-            $results = CurrentModel::select($select)->with(['histories', 'shipping', 'customer']);
+            $results = CurrentModel::select($select);
             $q = request()->get('q');
             if ($q) {
                 $results = $results->where('order_id', 'like', '%' . $q . '%');
@@ -48,16 +48,11 @@ class OrdersController extends WebController
             }
 
             $results = $results->orderBy('created_at', 'desc')->orderBy('status', 'asc');
-            if ($q) {
-                $results = $results->get();
-            } else {
-                $results = $results->paginate();
-            }
 
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
 
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories', 'shipping', 'customer'])->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
@@ -121,9 +116,9 @@ class OrdersController extends WebController
                     ['key' => 'shippings_name', 'label' => trans('nksoft::common.Name'), 'data' => $result->shipping->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                     ['key' => 'shippings_phone', 'label' => trans('nksoft::common.Phone'), 'data' => $result->shipping->phone, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                     ['key' => 'shippings_address', 'label' => trans('nksoft::settings.Address'), 'data' => $result->shipping->address, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
-                    ['key' => 'shippings_wards', 'label' => trans('nksoft::products.Wards'), 'data' => $result->shipping->wards->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
-                    ['key' => 'shippings_districts', 'label' => trans('nksoft::products.District'), 'data' => $result->shipping->districts->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
-                    ['key' => 'shippings_provinces', 'label' => trans('nksoft::products.Province'), 'data' => $result->shipping->provinces->name, 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_wards', 'label' => trans('nksoft::products.Wards'), 'data' => $result->shipping->wards ? $result->shipping->wards->name : '', 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_districts', 'label' => trans('nksoft::products.District'), 'data' => $result->shipping->districts ? $result->shipping->districts->name : '', 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
+                    ['key' => 'shippings_provinces', 'label' => trans('nksoft::products.Province'), 'data' => $result->shipping->provinces ? $result->shipping->provinces->name : '', 'defaultValue' => '', 'readonly' => true, 'type' => 'label'],
                 ],
             ],
             [

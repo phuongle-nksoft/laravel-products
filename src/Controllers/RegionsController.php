@@ -28,7 +28,7 @@ class RegionsController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
+                ['key' => 'order_by', 'label' => 'STT', 'widthCol' => 80],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
@@ -36,14 +36,13 @@ class RegionsController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
+            $results = CurrentModel::select($select);
             if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->orderBy('created_at', 'desc')->get();
-            } else {
-                $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
+                $results = $results->where('name', 'like', '%' . $q . '%');
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
@@ -97,7 +96,7 @@ class RegionsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.regions'), 'data' => $categories, 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],

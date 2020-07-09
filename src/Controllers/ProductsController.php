@@ -44,7 +44,7 @@ class ProductsController extends WebController
     {
         try {
             $columns = [
-                ['key' => 'order_by', 'label' => trans('nksoft::common.Order By')],
+                ['key' => 'order_by', 'label' => 'STT', 'widthCol' => 80],
                 ['key' => 'id', 'label' => 'Id', 'type' => 'hidden'],
                 ['key' => 'name', 'label' => trans('nksoft::common.Name')],
                 ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'formatter' => 'number'],
@@ -55,15 +55,13 @@ class ProductsController extends WebController
             ];
             $select = Arr::pluck($columns, 'key');
             $q = request()->get('q');
-            $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc');
+            $results = CurrentModel::select($select);
             if ($q && $q != 'null') {
-                $results = $results->where('name', 'like', '%' . $q . '%')->get();
-            } else {
-                $results = $results->paginate();
+                $results = $results->where('name', 'like', '%' . $q . '%');
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
@@ -168,7 +166,7 @@ class ProductsController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
                     ['key' => 'categories_id', 'label' => trans('nksoft::common.categories'), 'data' => $categories, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_banner_id', 'label' => trans('nksoft::products.Vintages Content'), 'data' => $vintagesBanner, 'class' => 'required', 'type' => 'select'],
                     ['key' => 'vintages_id', 'label' => trans('nksoft::products.Vintages Title'), 'data' => $vintages, 'class' => 'required', 'multiple' => true, 'type' => 'tree'],

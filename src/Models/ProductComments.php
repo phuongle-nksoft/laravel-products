@@ -11,7 +11,7 @@ class ProductComments extends NksoftModel
 
     public function children()
     {
-        return $this->belongsTo('\Nksoft\Products\Models\ProductComments', 'parent_id');
+        return $this->hasOne(ProductComments::class, 'parent_id');
     }
 
     public function product()

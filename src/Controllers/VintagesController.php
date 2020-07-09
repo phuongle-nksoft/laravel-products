@@ -35,15 +35,14 @@ class VintagesController extends WebController
                 ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
             $select = Arr::pluck($columns, 'key');
+            $results = CurrentModel::select($select);
             $q = request()->get('q');
             if ($q) {
-                $results = CurrentModel::select($select)->where('name', 'like', '%' . $q . '%')->with(['histories'])->orderBy('created_at', 'desc')->get();
-            } else {
-                $results = CurrentModel::select($select)->with(['histories'])->orderBy('created_at', 'desc')->paginate();
+                $results = $results->where('name', 'like', '%' . $q . '%');
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results,
+                'rows' => $results->with(['histories'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
@@ -97,7 +96,7 @@ class VintagesController extends WebController
                 'label' => trans('nksoft::common.General'),
                 'element' => [
                     ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
-                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => config('nksoft.productType'), 'type' => 'select'],
+                    ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
                     ['key' => 'parent_id', 'label' => trans('nksoft::common.vintages'), 'data' => $categories, 'type' => 'select'],
                     ['key' => 'name', 'label' => trans('nksoft::common.Name'), 'data' => null, 'class' => 'required', 'type' => 'text'],
                     ['key' => 'description', 'label' => trans('nksoft::common.Description'), 'data' => null, 'type' => 'editor'],
