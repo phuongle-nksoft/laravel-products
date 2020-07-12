@@ -56,7 +56,7 @@ class TagsController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
@@ -174,7 +174,7 @@ class TagsController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }

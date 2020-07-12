@@ -36,7 +36,7 @@ class TypeProductsController extends WebController
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
@@ -56,7 +56,7 @@ class TypeProductsController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
@@ -179,7 +179,7 @@ class TypeProductsController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }

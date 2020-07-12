@@ -55,7 +55,7 @@ class OrdersController extends WebController
                 'rows' => $results->with(['histories', 'shipping', 'customer'])->get(),
                 'columns' => $columns,
                 'module' => $this->module,
-                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+                'listDelete' => CurrentModel::whereIn('id', $listDelete)->with(['histories', 'shipping', 'customer'])->get(),
                 'disableNew' => true,
                 'showSearch' => true,
             ];
@@ -79,7 +79,7 @@ class OrdersController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
@@ -195,7 +195,7 @@ class OrdersController extends WebController
                 'disableDuplicate' => true,
                 'status' => config('nksoft.orderStatus'),
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }

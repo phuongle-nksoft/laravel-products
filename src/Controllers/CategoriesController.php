@@ -179,18 +179,7 @@ class CategoriesController extends WebController
 
             $result = CurrentModel::create($data);
             $this->setUrlRedirects($result);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
-            if ($request->hasFile('banner')) {
-                $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, 2);
-            }
-            if ($request->hasFile('maps')) {
-                $images = $request->file('maps');
-                $this->setMedia($images, $result->id, $this->module, 3);
-            }
+            $this->media($request, $result);
             $response = [
                 'result' => $result,
             ];
@@ -343,18 +332,7 @@ class CategoriesController extends WebController
             }
             $result->save();
             $this->setUrlRedirects($result);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
-            if ($request->hasFile('banner')) {
-                $images = $request->file('banner');
-                $this->setMedia($images, $result->id, $this->module, 2);
-            }
-            if ($request->hasFile('maps')) {
-                $images = $request->file('maps');
-                $this->setMedia($images, $result->id, $this->module, 3);
-            }
+            $this->media($request, $result);
             $response = [
                 'result' => $result,
             ];

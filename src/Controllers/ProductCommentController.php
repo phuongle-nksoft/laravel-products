@@ -42,7 +42,7 @@ class ProductCommentController extends WebController
                 'rows' => $results->with(['histories', 'product'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
-                'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
+                'listDelete' => CurrentModel::whereIn('id', $listDelete)->with(['histories', 'product'])->get(),
                 'showSearch' => true,
                 'disableNew' => true,
             ];
@@ -66,7 +66,7 @@ class ProductCommentController extends WebController
                 'formData' => $this->formData,
                 'module' => $this->module,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
@@ -219,7 +219,7 @@ class ProductCommentController extends WebController
                 'disableNew' => true,
                 'disableDuplicate' => true,
             ];
-            return $this->responseSuccess($response);
+            return $this->responseSuccess($response, false);
         } catch (\Execption $e) {
             return $this->responseError($e);
         }
