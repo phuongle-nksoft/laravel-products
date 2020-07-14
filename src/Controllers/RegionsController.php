@@ -210,7 +210,7 @@ class RegionsController extends WebController
             if (!$result) {
                 return $this->responseError('404');
             }
-            $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)->orderBy('order_by', 'asc')
+            $products = Products::where(['is_active' => 1])->whereIn('regions_id', $listIds)
                 ->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['c'])) {
@@ -264,7 +264,7 @@ class RegionsController extends WebController
             }
             $response = [
                 'result' => $result,
-                'products' => $products->paginate(),
+                'products' => $products->orderBy('order_by', 'asc')->paginate(),
                 'total' => $products->count(),
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',

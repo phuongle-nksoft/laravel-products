@@ -50,6 +50,7 @@ class ProductsController extends WebController
                 ['key' => 'price', 'label' => trans('nksoft::common.Price'), 'formatter' => 'number'],
                 ['key' => 'year_of_manufacture', 'label' => trans('nksoft::common.Year Of Manufacture'), 'data' => $this->getYearOfManufacture()],
                 ['key' => 'qty', 'label' => trans('nksoft::common.Qty'), 'data' => null, 'formatter' => 'number'],
+                ['key' => 'id', 'label' => trans('nksoft::common.categories'), 'data' => Categories::select(['id', 'name']), 'type' => 'select', 'relationship' => 'first_category', 'childRelationship' => 'categories'],
                 ['key' => 'is_active', 'label' => trans('nksoft::common.Status'), 'data' => $this->status(), 'type' => 'select'],
                 ['key' => 'type', 'label' => trans('nksoft::products.Type'), 'data' => $this->getTypeProducts(), 'type' => 'select'],
             ];
@@ -61,7 +62,7 @@ class ProductsController extends WebController
             }
             $listDelete = $this->getHistories($this->module)->pluck('parent_id');
             $response = [
-                'rows' => $results->with(['histories'])->orderBy('created_at', 'desc')->get(),
+                'rows' => $results->with(['histories', 'firstCategory'])->orderBy('created_at', 'desc')->get(),
                 'columns' => $columns,
                 'module' => $this->module,
                 'listDelete' => CurrentModel::whereIn('id', $listDelete)->get(),
@@ -304,10 +305,7 @@ class ProductsController extends WebController
             $this->setTags($request, $result);
             $this->setOptionals($request, $result);
             $this->setChildProduct($request, $result);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
+            $this->media($request, $result);
             $response = [
                 'result' => $result,
             ];
@@ -651,10 +649,7 @@ class ProductsController extends WebController
             $this->setVintagesProductsIndex($request, $result);
             $this->setOptionals($request, $result);
             $this->setChildProduct($request, $result);
-            if ($request->hasFile('images')) {
-                $images = $request->file('images');
-                $this->setMedia($images, $result->id, $this->module);
-            }
+            $this->media($request, $result);
             $response = [
                 'result' => $result,
             ];

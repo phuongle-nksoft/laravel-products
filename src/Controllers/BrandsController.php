@@ -226,7 +226,7 @@ class BrandsController extends WebController
             }
             $response = [
                 'result' => $result,
-                'products' => $products->paginate(),
+                'products' => $products->orderBy('order_by', 'asc')->paginate(),
                 'total' => $products->count(),
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',

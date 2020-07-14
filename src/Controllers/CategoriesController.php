@@ -209,7 +209,7 @@ class CategoriesController extends WebController
             }
             $products = Products::whereIn('id', function ($query) use ($listIds) {
                 $query->from(with(new CategoryProductsIndex())->getTable())->select(['products_id'])->whereIn('categories_id', $listIds)->groupBy('products_id')->pluck('products_id');
-            })->where(['is_active' => 1])->orderBy('order_by', 'asc')->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
+            })->where(['is_active' => 1])->with(['images', 'categoryProductIndies', 'vintages', 'brands', 'regions', 'professionalsRating']);
             $allRequest = request()->all();
             if (isset($allRequest['vg'])) {
                 $vingateId = $allRequest['vg'];
@@ -257,7 +257,7 @@ class CategoriesController extends WebController
 
             $response = [
                 'result' => $result,
-                'products' => $products->paginate(),
+                'products' => $products->orderBy('order_by', 'asc')->paginate(),
                 'total' => $products->count(),
                 'banner' => $result->images()->where(['group_id' => 2])->first(),
                 'template' => 'products',
