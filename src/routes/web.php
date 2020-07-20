@@ -51,6 +51,7 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('addComment', 'ProductsController@addComment');
         Route::get('getComment/{productId}', 'ProductsController@getComment');
         Route::get('home', 'ProductsController@getHome');
+        Route::get('resVnpay', 'PaymentsController@resVnpay');
         Route::resources([
             'customers' => CustomersController::class,
         ]);

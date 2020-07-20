@@ -224,6 +224,14 @@ class BrandsController extends WebController
                     return !in_array($item['type'], ['p']);
                 });
             }
+            if (isset($allRequest['pr'])) {
+                $pr = $allRequest['pr'];
+                $condition = explode('-', $pr);
+                $products = $products->where('price', '>=', $condition[0] * 1000);
+                if (isset($condition[1])) {
+                    $products = $products->where('price', '<=', $condition[1] * 1000);
+                }
+            }
             $response = [
                 'result' => $result,
                 'products' => $products->orderBy('order_by', 'asc')->paginate(),

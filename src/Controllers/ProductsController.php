@@ -98,7 +98,7 @@ class ProductsController extends WebController
     private function getYearOfManufacture($result = null)
     {
         $date = [
-            ['id' => 0, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
+            ['id' => 300, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
         ];
         for ($i = 0; $i < 200; $i++) {
             $v = date('Y') - $i;
@@ -430,8 +430,6 @@ class ProductsController extends WebController
         $name = $request->get('optionals_name');
         $description = $request->get('optionals_description');
         $video_id = $request->get('optionals_video');
-        $images = $request->file('optionals_images');
-        $banner = $request->file('optionals_banner');
         if ($delete || $name == null) {
             ProductOptional::where(['products_id' => $result->id])->forceDelete();
         } else if ($name != null) {
@@ -443,11 +441,13 @@ class ProductsController extends WebController
             ];
             $data['slug'] = $this->getSlug($data);
             $optional = ProductOptional::updateOrCreate(['products_id' => $result->id], $data);
-            if ($request->hasFile('optionals_images')) {
-                $this->setMedia($images, $optional->id, 'product_optionals');
+            $optionalsImages = $request->get('optionals_images');
+            if ($optionalsImages) {
+                $this->setMedia($optionalsImages, $optional->id, 'product_optionals');
             }
-            if ($request->hasFile('optionals_banner')) {
-                $this->setMedia($banner, $optional->id, 'product_optionals', 2);
+            $optionalsBanner = $request->get('optionals_banner');
+            if ($optionalsBanner) {
+                $this->setMedia($optionalsBanner, $optional->id, 'product_optionals', 2);
             }
         }
 
@@ -854,6 +854,14 @@ class ProductsController extends WebController
             if (isset($allRequest['qty'])) {
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
+            }
+            if (isset($allRequest['pr'])) {
+                $pr = $allRequest['pr'];
+                $condition = explode('-', $pr);
+                $products = $products->where('price', '>=', $condition[0] * 1000);
+                if (isset($condition[1])) {
+                    $products = $products->where('price', '<=', $condition[1] * 1000);
+                }
             }
             $response = [
                 'result' => $result,

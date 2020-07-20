@@ -30,6 +30,7 @@ class CreatePaymentsTable extends Migration
             $table->string('SecureHashType')->nullable();
             $table->text('SecureHash')->nullable();
             $table->integer('status')->nullable();
+            $table->string('message')->nullable();
             $table->softDeletes();
             $table->timestamps();
             $table->foreign('orders_id', 'payments_orders_id_foreign')->references('id')->on('orders')->onDelete('cascade');

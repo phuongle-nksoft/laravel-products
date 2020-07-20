@@ -253,6 +253,14 @@ class CategoriesController extends WebController
                 $qty = $allRequest['qty'];
                 $products = $products->where('qty', $qty == 1 ? '<' : '>', 5);
             }
+            if (isset($allRequest['pr'])) {
+                $pr = $allRequest['pr'];
+                $condition = explode('-', $pr);
+                $products = $products->where('price', '>=', $condition[0] * 1000);
+                if (isset($condition[1])) {
+                    $products = $products->where('price', '<=', $condition[1] * 1000);
+                }
+            }
             $listFilter = $this->listFilter($result->type, $products, $result->parent_id > 0 ? 'c' : '');
 
             $response = [

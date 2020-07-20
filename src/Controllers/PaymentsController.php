@@ -220,23 +220,10 @@ class PaymentsController extends WebController
         //
     }
 
-    public function callback(Request $request, $service)
+    public function checkVNPayCallback(Request $request, $ipn = false)
     {
-        \Log::info('callback');
-        \Log::info(print_r($request->all(), true));
-        $responseCode = $request->get('vnp_ResponseCode');
-        $this->resetSession(session('order'));
-        if ($responseCode == '00') {
-            return redirect('dat-hang-thanh-cong');
-        } else {
-            return redirect('fails');
-        }
-    }
-
-    public function save(Request $request, $service)
-    {
+        \Log::info($request->fullUrl());
         $data = $request->all();
-        \Log::info(print_r($data, true));
         $inputData = array();
         foreach ($data as $key => $value) {
             if (substr($key, 0, 4) == "vnp_") {
@@ -261,45 +248,38 @@ class PaymentsController extends WebController
         $vnp_HashSecret = env('VNP_HASHSECRET');
         $secureHash = hash('sha256', $vnp_HashSecret . $hashData);
         $orderId = $inputData['vnp_TxnRef'];
+        $order = Orders::where(['order_id' => $orderId])->first();
+        $total = $data['vnp_Amount'] / 100;
         try {
             $vnpayResponse = array();
             if ($secureHash == $vnp_SecureHash) {
                 $responseCode = $request->get('vnp_ResponseCode');
-                $orderPayment = session('orderPayment');
-                $order = Orders::where(['order_id' => $orderId])->first();
-                \Log::info(print_r($orderPayment, true));
-                \Log::info(print_r($order, true));
-                if ($order && $orderId == $order->order_id) {
-                    if ($responseCode == '00') {
-                        $data = array(
-                            'Amount' => $request->get('vnp_Amount'),
-                            'BankCode' => $request->get('vnp_BankCode'),
-                            'BankTranNo' => $request->get('vnp_BankTranNo'),
-                            'CardType' => $request->get('vnp_CardType'),
-                            'OrderInfo' => $request->get('vnp_OrderInfo'),
-                            'PayDate' => $request->get('vnp_PayDate'),
-                            'ResponseCode' => $request->get('vnp_ResponseCode'),
-                            'TmnCode' => $request->get('vnp_TmnCode'),
-                            'TransactionNo' => $request->get('vnp_TransactionNo'),
-                            'TxnRef' => $request->get('vnp_TxnRef'),
-                            'orders_id' => $order->id,
-                            'SecureHashType' => $request->get('vnp_SecureHashType'),
-                            'SecureHash' => $request->get('vnp_SecureHash'),
-                        );
-                        $order->status = 2;
-                        $order->save();
-                        CurrentModel::create($data);
-                        $this->resetSession($order);
-                        Notifications::createItem(1, $orderPayment['customers_id']);
-                        $vnpayResponse['RspCode'] = '00';
-                        $vnpayResponse['Message'] = 'Confirm Success';
-                    } else {
-                        $vnpayResponse['RspCode'] = '02';
-                        $vnpayResponse['Message'] = 'Order already confirmed';
-                    }
-                } else {
+                if (!$order) {
                     $vnpayResponse['RspCode'] = '01';
                     $vnpayResponse['Message'] = 'Order not found';
+                } else if ($order->total != $total) {
+                    $vnpayResponse['RspCode'] = '04';
+                    $vnpayResponse['Message'] = 'Invalid amount';
+                } else if ($order->status > 1) {
+                    $vnpayResponse['RspCode'] = '02';
+                    $vnpayResponse['Message'] = 'Order already confirmed';
+                    $vnpayResponse['status'] = 1;
+                } else if ($responseCode == '00') {
+                    if ($ipn) {
+                        $order->status = 2;
+                        $order->save();
+                        $this->resetSession($order);
+                        Notifications::createItem(1, $order->customers_id);
+                    }
+                    $vnpayResponse['status'] = 2;
+                    $vnpayResponse['RspCode'] = '00';
+                    $vnpayResponse['Message'] = 'Confirm Success';
+                } else {
+                    $order->status = 5;
+                    $order->save();
+                    $vnpayResponse['status'] = 5;
+                    $vnpayResponse['RspCode'] = '00';
+                    $vnpayResponse['Message'] = 'Confirm Success';
                 }
             } else {
                 $vnpayResponse['RspCode'] = '97';
@@ -309,6 +289,46 @@ class PaymentsController extends WebController
             $vnpayResponse['RspCode'] = '99';
             $vnpayResponse['Message'] = 'Unknow error';
         }
+        if ($order) {
+            $dataPayment = array(
+                'Amount' => $request->get('vnp_Amount'),
+                'BankCode' => $request->get('vnp_BankCode'),
+                'BankTranNo' => $request->get('vnp_BankTranNo'),
+                'CardType' => $request->get('vnp_CardType'),
+                'OrderInfo' => $request->get('vnp_OrderInfo'),
+                'PayDate' => $request->get('vnp_PayDate'),
+                'ResponseCode' => $vnpayResponse['RspCode'],
+                'TmnCode' => $request->get('vnp_TmnCode'),
+                'TransactionNo' => $request->get('vnp_TransactionNo'),
+                'TxnRef' => $request->get('vnp_TxnRef'),
+                'orders_id' => $order->id,
+                'SecureHashType' => $request->get('vnp_SecureHashType'),
+                'SecureHash' => $request->get('vnp_SecureHash'),
+                'status' => $order->status,
+                'message' => $vnpayResponse['Message'],
+            );
+            CurrentModel::updateOrCreate(['TxnRef' => $request->get('vnp_TxnRef'), 'orders_id' => $order->id], $dataPayment);
+        }
+        return $vnpayResponse;
+    }
+
+    public function callback(Request $request, $service)
+    {
+        \Log::info(print_r('callback', true));
+        $orderId = $request->get('vnp_TxnRef');
+        $payment = CurrentModel::where(['TxnRef' => $orderId])->first();
+        $this->resetSession(session('order'));
+        if ($payment && $payment->status == 2 && $payment->ResponseCode == '00') {
+            return redirect('dat-hang-thanh-cong');
+        } else {
+            return redirect('fails');
+        }
+    }
+
+    public function save(Request $request, $service)
+    {
+        \Log::info(print_r('ipn', true));
+        $vnpayResponse = $this->checkVNPayCallback($request, true);
         \Log::info(print_r($vnpayResponse, true));
         return response($vnpayResponse);
     }
@@ -319,5 +339,20 @@ class PaymentsController extends WebController
         session()->put('user', $customer);
         session()->forget(config('nksoft.addCart'));
         session()->forget('orderPayment');
+    }
+
+    public function resVnpay()
+    {
+        $order = session('order');
+        if (!$order) {
+            return $this->responseError('404');
+        }
+
+        $data = [
+            'order' => $order,
+            'resVnpay' => CurrentModel::select(['status', 'message', 'ResponseCode', 'TxnRef'])->where(['orders_id' => $order->id])->first(),
+        ];
+        session()->forget('order');
+        return $this->responseViewSuccess($data);
     }
 }
