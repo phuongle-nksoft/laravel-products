@@ -98,7 +98,7 @@ class ProductsController extends WebController
     private function getYearOfManufacture($result = null)
     {
         $date = [
-            ['id' => 300, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
+            ['id' => 30000, 'name' => 'None Vintage', 'selected' => $result ? $result->year_of_manufacture == 0 : false],
         ];
         for ($i = 0; $i < 200; $i++) {
             $v = date('Y') - $i;

@@ -33,4 +33,6 @@ Route::group(['prefix' => 'api', 'namespace' => 'Nksoft\Products\Controllers'], 
     Route::get('products/list-filter', 'ProductsController@listFilter')->name('product-list-filter');
     Route::get('professional', 'ProfessionalsController@getAll')->name('professional');
     Route::get('tim-kiem', 'ProductsController@getSearch')->name('search');
+    Route::post('get-code-password', 'CustomersController@getCode');
+    Route::post('reset-password', 'CustomersController@resetPassword');
 });

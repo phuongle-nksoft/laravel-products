@@ -4,10 +4,12 @@ namespace Nksoft\Products\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Mail;
 use Nksoft\Master\Controllers\WebController;
+use Nksoft\Products\Mail\EmailGetCode;
 use Nksoft\Products\Models\Customers as CurrentModel;
 use Nksoft\Products\Models\Products;
+use Socialite;
 use \Arr;
 
 class CustomersController extends WebController
@@ -350,5 +352,49 @@ class CustomersController extends WebController
             return $this->responseError(['404']);
         }
         return $this->responseViewSuccess(['user' => $user]);
+    }
+
+    public function getCode(Request $request)
+    {
+        try {
+            $message = ['email.required' => 'Vui lòng nhập email', 'email.email' => 'Định dạng Email không đúng!'];
+            $rules = ['email' => 'required | email'];
+            $validator = Validator($request->all(), $rules, $message);
+            if ($validator->fails()) {
+                return $this->responseError($validator->errors());
+            }
+            $customer = CurrentModel::where(['email' => $request->get('email')])->first();
+            if (!$customer) {
+                return $this->responseError(['Email không tồn tại.']);
+            }
+            $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $customer->reset_password = substr(str_shuffle($permitted_chars), 0, 6);
+            $customer->save();
+            Mail::to($customer->email)->cc('leduyphuong64@gmail.com')->send(new EmailGetCode($customer));
+            return $this->responseViewSuccess([], ['Vui lòng kiểm tra email.']);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            $message = ['password.required' => 'Vui lòng nhập mật khẩu', 'password.confirmed' => 'Mật khẩu không trùng nhau!', 'password.min' => 'Mật khẩu ít nhất là 6 ký tự!', 'code.required' => 'Vui lòng nhập mã code!'];
+            $rules = ['password' => 'required | confirmed | min:6', 'code' => 'required'];
+            $validator = Validator($request->all(), $rules, $message);
+            if ($validator->fails()) {
+                return $this->responseError($validator->errors());
+            }
+            $customer = CurrentModel::where(['reset_password' => $request->get('code')])->where('updated_at', '>=', date('Y-m-d H:i:s', strtotime('-30 minutes')))->first();
+            if (!$customer) {
+                return $this->responseError(['Mã code không tồn tại']);
+            }
+            $customer->password = \Hash::make($request->get('password'));
+            $customer->save();
+            return $this->responseViewSuccess([], ['Mật khẩu đã được thay đổi.']);
+        } catch (\Exception $e) {
+            return $this->responseError([$e->getMessage()]);
+        }
     }
 }

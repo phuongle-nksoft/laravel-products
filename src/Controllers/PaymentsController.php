@@ -263,7 +263,6 @@ class PaymentsController extends WebController
                 } else if ($order->status > 1) {
                     $vnpayResponse['RspCode'] = '02';
                     $vnpayResponse['Message'] = 'Order already confirmed';
-                    $vnpayResponse['status'] = 1;
                 } else if ($responseCode == '00') {
                     if ($ipn) {
                         $order->status = 2;
@@ -271,13 +270,11 @@ class PaymentsController extends WebController
                         $this->resetSession($order);
                         Notifications::createItem(1, $order->customers_id);
                     }
-                    $vnpayResponse['status'] = 2;
                     $vnpayResponse['RspCode'] = '00';
                     $vnpayResponse['Message'] = 'Confirm Success';
                 } else {
                     $order->status = 5;
                     $order->save();
-                    $vnpayResponse['status'] = 5;
                     $vnpayResponse['RspCode'] = '00';
                     $vnpayResponse['Message'] = 'Confirm Success';
                 }
@@ -289,7 +286,7 @@ class PaymentsController extends WebController
             $vnpayResponse['RspCode'] = '99';
             $vnpayResponse['Message'] = 'Unknow error';
         }
-        if ($order) {
+        if ($order && $vnpayResponse['RspCode'] != '02') {
             $dataPayment = array(
                 'Amount' => $request->get('vnp_Amount'),
                 'BankCode' => $request->get('vnp_BankCode'),
@@ -317,7 +314,13 @@ class PaymentsController extends WebController
         \Log::info(print_r('callback', true));
         $orderId = $request->get('vnp_TxnRef');
         $payment = CurrentModel::where(['TxnRef' => $orderId])->first();
-        $this->resetSession(session('order'));
+        session(['orderId' => $orderId]);
+        session(['vnpayResponse' => $this->checkVNPayCallback($request)]);
+        $order = session('order');
+        if ($order) {
+            $this->resetSession(session('order'));
+        }
+
         if ($payment && $payment->status == 2 && $payment->ResponseCode == '00') {
             return redirect('dat-hang-thanh-cong');
         } else {
@@ -347,10 +350,13 @@ class PaymentsController extends WebController
         if (!$order) {
             return $this->responseError('404');
         }
-
+        $orderId = session('orderId');
+        $vnpayResponse = session('vnpayResponse');
+        $vnpayResponse['TxnRef'] = $orderId;
         $data = [
             'order' => $order,
-            'resVnpay' => CurrentModel::select(['status', 'message', 'ResponseCode', 'TxnRef'])->where(['orders_id' => $order->id])->first(),
+            'resVnpay' => CurrentModel::select(['status', 'message', 'ResponseCode', 'TxnRef'])->where(['TxnRef' => $orderId])->first(),
+            'vnpayResponse' => $vnpayResponse,
         ];
         session()->forget('order');
         return $this->responseViewSuccess($data);
