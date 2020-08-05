@@ -357,12 +357,12 @@ class OrdersController extends WebController
         $today = Date('Y-m-d');
         $promotion = Promotions::where(['code' => $code])->whereRaw('(expice_date >= ? or expice_date is null) and (start_date <= ? or start_date is null)', [$today, $today])->first();
         if (!$promotion) {
-            return $this->responseError(['Mã code không hợp lệ']);
+            return $this->responseError(['Mã khuyến mãi không hợp lệ.']);
         }
         $cart = $this->calcDiscount(session(config('nksoft.addCart')), $promotion);
         session([config('nksoft.addCart') => $cart]);
         session(['discount' => $promotion]);
-        return $this->responseViewSuccess(['discount' => $promotion, 'cart' => $cart], ['Mã code đã được áp dụng.']);
+        return $this->responseViewSuccess(['discount' => $promotion, 'cart' => $cart], ['Mã khuyến mãi đã được áp dụng.']);
     }
 
     /**
@@ -373,7 +373,7 @@ class OrdersController extends WebController
         session()->forget('discount');
         $cart = $this->calcDiscount(session(config('nksoft.addCart')));
         session([config('nksoft.addCart') => $cart]);
-        return $this->responseViewSuccess(['discount' => null, 'cart' => $cart], ['Mã đã xóa mã giảm giá.']);
+        return $this->responseViewSuccess(['discount' => null, 'cart' => $cart], ['Mã khuyến mãi đã được xóa.']);
     }
 
     /**
